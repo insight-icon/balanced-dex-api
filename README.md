@@ -3,7 +3,7 @@
 
 
 
-## Links:
+### Links:
 > [Balanced Network](https://balanced.network/)
 
 > [Functional Spec](https://github.com/balancednetwork/docs/blob/master/functional_spec.md#api--ws-endpoints)
