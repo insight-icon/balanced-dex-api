@@ -117,7 +117,7 @@ async def consume(consumer, topicname):
         return msg.value.decode()
 
 
-@app.websocket_route("/consumer/{topicname}")
+@app.websocket_route("/consumer/{id}/{topicname}")
 class WebsocketConsumer(WebSocketEndpoint):
     """
     Consume messages from <topicname>
@@ -127,10 +127,11 @@ class WebsocketConsumer(WebSocketEndpoint):
     """
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        topicname = websocket["path"].split("/")[2]  # until I figure out an alternative
-
-        await websocket.accept()
-        await websocket.send_json({"Message: ": "connected"})
+        topicname = websocket["path"].split("/")[3]  # until I figure out an alternative
+        clientid = websocket["path"].split("/")[2]
+        
+        await manager.connect(websocket)
+        await manager.broadcast(f"Client connected : {clientid}")
 
         loop = asyncio.get_event_loop()
         self.consumer = AIOKafkaConsumer(
@@ -150,6 +151,10 @@ class WebsocketConsumer(WebSocketEndpoint):
         logger.info("connected")
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
+        clientid = websocket["path"].split("/")[2]
+        manager.disconnect(websocket)
+        await manager.broadcast(f"Client #{clientid} left")
+
         self.consumer_task.cancel()
         await self.consumer.stop()
         logger.info(f"counter: {self.counter}")
@@ -157,17 +162,17 @@ class WebsocketConsumer(WebSocketEndpoint):
         logger.info("consumer stopped")
 
     async def on_receive(self, websocket: WebSocket, data: typing.Any) -> None:
-        await websocket.send_json({"Message: ": data})
+        clientid = websocket["path"].split("/")[2]
+        await manager.send_personal_message(f"You wrote: {data}", websocket)
+        await manager.broadcast(f"Client #{clientid} says: {data}")
 
     async def send_consumer_message(self, websocket: WebSocket, topicname: str) -> None:
         self.counter = 0
         while True:
             data = await consume(self.consumer, topicname)
-            print("data : ", data)
             # response = ConsumerResponse(topic=topicname, **json.loads(data))
-            logger.info(data)#response)
-            # await websocket.send_text(f"{response.json()}")
-            await websocket.send_text(f"{data}")
+            logger.info(f"data : {data}")
+            await manager.send_personal_message(f"{data}", websocket)
             print("websocket.send_text done")
             self.counter = self.counter + 1
 
