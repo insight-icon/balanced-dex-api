@@ -18,12 +18,12 @@ from loguru import logger
 from starlette.endpoints import WebSocketEndpoint
 from starlette.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel
-from pydantic import confloat
-from pydantic import StrictStr
+# from pydantic import BaseModel
+# from pydantic import confloat
+# from pydantic import StrictStr
 
 KAFKA_INSTANCE = "localhost:9092"
-PROJECT_NAME = "tester"
+PROJECT_NAME = "insight_tester"
 app = FastAPI(title=PROJECT_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
@@ -85,9 +85,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
-
 manager = ConnectionManager()
-
 
 @app.get("/")
 async def get():
@@ -109,19 +107,17 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{client_id} left the chat")
 
-################
-################
+################ kafka topic consumption ################
 async def consume(consumer, topicname):
     async for msg in consumer:
         print("for msg in consumer: ", msg)
         return msg.value.decode()
 
-
-@app.websocket_route("/consumer/{id}/{topicname}")
+@app.websocket_route("/consumer/{clientid}/{topicname}")
 class WebsocketConsumer(WebSocketEndpoint):
     """
     Consume messages from <topicname>
-    This will start a Kafka Consumer from a topic
+    This will start a Kafka Consumer for a topic
     And this path operation will:
     * return ConsumerResponse
     """
@@ -176,10 +172,4 @@ class WebsocketConsumer(WebSocketEndpoint):
             print("websocket.send_text done")
             self.counter = self.counter + 1
 
-
-@app.get("/ping")
-def ping():
-    return {"ping": "pong!"}
-
-########################
-########################
+######################## end of kafka topic consumption ########################
