@@ -18,7 +18,8 @@ from loguru import logger
 from starlette.endpoints import WebSocketEndpoint
 from starlette.middleware.cors import CORSMiddleware
 
-# from pydantic import BaseModel
+from pydantic import BaseModel
+from typing import Optional
 # from pydantic import confloat
 # from pydantic import StrictStr
 
@@ -173,3 +174,27 @@ class WebsocketConsumer(WebSocketEndpoint):
             self.counter = self.counter + 1
 
 ######################## end of kafka topic consumption ########################
+
+################ mongo db  ################
+import motor.motor_asyncio
+import pymongo 
+import urllib.parse 
+import json
+
+mongo_uri = "mongodb+srv://<username>:" + urllib.parse.quote(<password>) + "@cluster0.7ogsb.mongodb.net/insight_test?retryWrites=true&w=majority"
+client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
+
+class Person(BaseModel):
+    name: str
+    phone: Optional[str] = None
+
+
+@app.post("/inserttomongo")
+async def post(person: Person):
+    document = {
+        "name": person.name,
+        "phone": person.phone
+    }
+    result = await client.insight_test.person.insert_one(document)
+    return("result",repr(result.inserted_id))
+    # return person    
