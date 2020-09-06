@@ -33,7 +33,7 @@ from typing import Optional
 # from pydantic import confloat
 # from pydantic import StrictStr
 
-KAFKA_INSTANCE = "localhost:9092"
+KAFKA_INSTANCE = "kafka:9092"
 PROJECT_NAME = "insight_tester"
 app = FastAPI(title=PROJECT_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -200,7 +200,7 @@ import json
 
 # mongo_uri = "mongodb+srv://anuragjha:" + urllib.parse.quote("Blue@0520") + "@cluster0.7ogsb.mongodb.net/insight_test?retryWrites=true&w=majority"
 # client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
-client = motor.motor_asyncio.AsyncIOMotorClient('localhost', 27017)
+client = motor.motor_asyncio.AsyncIOMotorClient('mongodb', 27017)
 
 
 class Person(BaseModel):
@@ -218,9 +218,7 @@ async def do_insert(person: Person):
     
 @app.post("/mongo/insert")
 async def post(person: Person):
-    return await do_insert(person)
-    # x = asyncio.create_task(await do_insert(person))
-    # return x
+    return await asyncio.wait_for(do_insert(person), 3.0)
 
 async def do_find_one(person: Person):
     document = await client.insight_test.person.find_one({"name":person.name})
@@ -228,8 +226,7 @@ async def do_find_one(person: Person):
 
 @app.post("/mongo/find_one")
 async def post(person: Person): 
-    x = await do_find_one(person)
-    print()
+    x = await asyncio.wait_for(do_find_one(person), 3.0)
     return {"name":x["name"], "phone":x["phone"]}
 
 @app.post("/mongo/find")
@@ -247,8 +244,9 @@ class RedisData(BaseModel):
     key: str
     value: Optional[str] = None
 
-redisClient = redis.Redis(host='127.0.0.1', port=6379, db=0)
+# redisClient = redis.Redis(host='default', port=6379, db=0)
 
+redisClient = redis.Redis(host='redis', port=6379, db=0)
 @app.post("/redis/set")
 async def post(redis_data: RedisData):
     return redisClient.set(redis_data.key, redis_data.value)
