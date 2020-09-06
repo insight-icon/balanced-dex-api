@@ -1,3 +1,13 @@
+###############################################################################################################
+############################################ To read and implement ############################################
+
+# Background tasks are run after the response is sent (https://fastapi.tiangolo.com/tutorial/background-tasks/)
+
+# motor for async connection to MongoDB (https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
+
+###############################################################################################################
+###############################################################################################################
+
 from typing import List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -27,6 +37,7 @@ KAFKA_INSTANCE = "localhost:9092"
 PROJECT_NAME = "insight_tester"
 app = FastAPI(title=PROJECT_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
+
 
 html = """
 <!DOCTYPE html>
@@ -109,6 +120,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
         await manager.broadcast(f"Client #{client_id} left the chat")
 
 ################ kafka topic consumption ################
+
+
 async def consume(consumer, topicname):
     async for msg in consumer:
         print("for msg in consumer: ", msg)
@@ -181,20 +194,62 @@ import pymongo
 import urllib.parse 
 import json
 
-mongo_uri = "mongodb+srv://<username>:" + urllib.parse.quote(<password>) + "@cluster0.7ogsb.mongodb.net/insight_test?retryWrites=true&w=majority"
-client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
+# mongo_uri = "mongodb+srv://anuragjha:" + urllib.parse.quote("Blue@0520") + "@cluster0.7ogsb.mongodb.net/insight_test?retryWrites=true&w=majority"
+# client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
+client = motor.motor_asyncio.AsyncIOMotorClient('localhost', 27017)
+
 
 class Person(BaseModel):
     name: str
     phone: Optional[str] = None
 
-
-@app.post("/inserttomongo")
-async def post(person: Person):
+# https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
+async def do_insert(person: Person):
     document = {
         "name": person.name,
         "phone": person.phone
     }
     result = await client.insight_test.person.insert_one(document)
     return("result",repr(result.inserted_id))
-    # return person    
+    
+@app.post("/mongo/insert")
+async def post(person: Person):
+    return await do_insert(person)
+    # x = asyncio.create_task(await do_insert(person))
+    # return x
+
+async def do_find_one(person: Person):
+    document = await client.insight_test.person.find_one({"name":person.name})
+    return document
+
+@app.post("/mongo/find_one")
+async def post(person: Person): 
+    x = await do_find_one(person)
+    print()
+    return {"name":x["name"], "phone":x["phone"]}
+
+@app.post("/mongo/find")
+async def post(person: Person):
+    return await do_insert(person)
+    # x = asyncio.create_task(await do_insert(person))    
+
+# implement orther CRUD - # https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
+######################## end of mongo db ########################
+
+################ redis connection ################
+import redis
+
+class RedisData(BaseModel):
+    key: str
+    value: Optional[str] = None
+
+redisClient = redis.Redis(host='localhost', port=6379, db=0)
+
+@app.post("/redis/set")
+async def post(redis_data: RedisData):
+    return redisClient.set(redis_data.key, redis_data.value)
+
+
+@app.post("/redis/get")
+async def post(redis_data: RedisData):
+    return redisClient.get(redis_data.key)
