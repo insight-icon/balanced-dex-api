@@ -2,10 +2,15 @@ version: '3'
 
 services:
 
+  # insight_service:
+  #   build: .
+  #   ports:
+  #     - "8000:8000"
+
   zookeeper:
     image: confluentinc/cp-zookeeper:5.0.1-1
     ports:
-      - "2181:2181"
+      - "127.0.0.1:2181:2181"
     environment:
       zk_id: "1"
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -17,7 +22,7 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     environment:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
@@ -31,16 +36,16 @@ services:
   mongodb:
     image: mongo:latest
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - $HOME/mongodb/data/db:/data/db
     networks:
       - default
-  
+
   redis:
     image: redis:latest
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - $HOME/redis/data/db:/data/db
     networks:

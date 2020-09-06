@@ -1,0 +1,10 @@
+asyncio
+loguru
+pydantic
+#
+aiokafka
+#
+motor
+pymongo
+#
+redis
