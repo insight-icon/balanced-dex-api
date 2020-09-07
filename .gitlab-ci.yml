@@ -41,14 +41,14 @@ deploy-stag:
   stage: deploy
   script: 
     - >
-      DOMAIN=stag.dex-api.com
-      TRAEFIK_TAG=stag.dex-api.com
-      STACK_NAME=stag-dex-api-com
+      DOMAIN=stag.balanced-dex-api.com
+      TRAEFIK_TAG=stag.balanced-dex-api.com
+      STACK_NAME=stag-balanced-dex-api-com
       TAG=stag
       sh ./scripts/deploy.sh
   environment:
     name: staging
-    url: https://stag.dex-api.com
+    url: https://stag.balanced-dex-api.com
   only:
     - master
   tags:
@@ -59,14 +59,14 @@ deploy-prod:
   stage: deploy
   script:
     - >
-      DOMAIN=dex-api.com
-      TRAEFIK_TAG=dex-api.com
-      STACK_NAME=dex-api-com
+      DOMAIN=balanced-dex-api.com
+      TRAEFIK_TAG=balanced-dex-api.com
+      STACK_NAME=balanced-dex-api-com
       TAG=prod
       sh ./scripts/deploy.sh
   environment:
     name: production
-    url: https://dex-api.com
+    url: https://balanced-dex-api.com
   only:
     - production
   tags:
