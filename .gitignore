@@ -1,5 +1,6 @@
 .vscode
 .mypy_cache
 docker-stack.yml
+/.idea
 /.env
 /cookiecutter-config-file.yml
