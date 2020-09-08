@@ -1,14 +1,6 @@
 version: "3.3"
 services:
 
-#  insight_service:
-#    # build: .
-#    image: dex_api:latest
-#    ports:
-#      - "8000:8000"
-#    networks:
-#      - default
-
   zookeeper:
     image: confluentinc/cp-zookeeper:5.0.1-1
     ports:

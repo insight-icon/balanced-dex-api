@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket
+from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from starlette.endpoints import WebSocketEndpoint
 # from starlette.middleware.cors import CORSMiddleware
@@ -9,12 +10,22 @@ from loguru import logger
 import typing
 from pydantic import BaseModel
 from typing import Optional
+import motor.motor_asyncio
 import redis
-from starlette.websockets import WebSocketDisconnect
+# from starlette.websockets import WebSocketDisconnect
+import json
+
+from app import schemas, models, crud
 
 router = APIRouter()
 # app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
+manager = models.ConnectionManager()
+redisClient = redis.Redis(host='redis', port=6379, db=0)
+mongoClient = motor.motor_asyncio.AsyncIOMotorClient('mongodb', 27017)
+
+
+# # ################ web socket chat  ################
 @router.get("/")
 async def get():
     return HTMLResponse(html)
@@ -57,31 +68,6 @@ html = """
 """
 
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        print("send_personal_message: " + message)
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str):
-        print("broadcast:", message)
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-
-manager = ConnectionManager()
-
-
-# # web socket chat
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int):
     await manager.connect(websocket)
@@ -95,12 +81,24 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
         await manager.broadcast(f"Client #{client_id} left the chat")
 
 
-# # kafka topic consumption
+@router.get("/ws/connections")
+async def get_connections():
+    x = []
+    for conn in manager.active_connections:
+        x.append(conn["path"])
+    return json.dumps(x)
+
+
+# ################ kafka topic consumer connected to a web socket  ################
+
 async def consume(consumer, topicname):
     async for msg in consumer:
         print("for msg in consumer: ", msg)
         return msg.value.decode()
 
+
+KAFKA_INSTANCE = "kafka:9092"
+PROJECT_NAME = "dex-api"
 
 @router.websocket_route("/consumer/{clientid}/{topicname}")
 class WebsocketConsumer(WebSocketEndpoint):
@@ -110,31 +108,38 @@ class WebsocketConsumer(WebSocketEndpoint):
     And this path operation will:
     * return ConsumerResponse
     """
-    KAFKA_INSTANCE = "kafka:9092"
-    PROJECT_NAME = "dex-api"
+
 
     async def on_connect(self, websocket: WebSocket) -> None:
-        topicname = websocket["path"].split("/")[3]  # until I figure out an alternative
-        clientid = websocket["path"].split("/")[2]
-
+        logger.debug("Inside on_connect for topic consumption")
+        clientid = websocket["path"].split("/")[5]
+        logger.debug("clientid:" + clientid)
+        topicname = websocket["path"].split("/")[6]  # until I figure out an alternative
+        logger.debug("topicname:" + topicname)
+        logger.debug("Going to connect to websocket")
         await manager.connect(websocket)
         await manager.broadcast(f"Client connected : {clientid}")
+        logger.debug("Connected to websocket")
 
-        loop = asyncio.get_event_loop()
+        # loop = asyncio.get_event_loop()
+        # loop = asyncio.get_running_loop()
+        logger.debug("get_event_loop completed")
+        # todo: consumer above cannot start
         self.consumer = AIOKafkaConsumer(
             topicname,
-            loop=loop,
-            client_id=self.PROJECT_NAME,
-            bootstrap_servers=self.KAFKA_INSTANCE,
+            # loop=loop,
+            client_id=PROJECT_NAME,
+            bootstrap_servers="kafka:9092",
             enable_auto_commit=False,
         )
-
+        logger.debug("self.consumer => AIOKafkaConsumer complete")
+        # todo: consumer above cannot start
         await self.consumer.start()
+        logger.debug("await self.consumer.start() complete")
 
         self.consumer_task = asyncio.create_task(
             self.send_consumer_message(websocket=websocket, topicname=topicname)
         )
-
         logger.info("connected")
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
@@ -164,73 +169,26 @@ class WebsocketConsumer(WebSocketEndpoint):
             self.counter = self.counter + 1
 
 
-# # ################ mongo db  ################
-
-import motor.motor_asyncio
-import pymongo
-import urllib.parse
-import json
-
-# client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
-client = motor.motor_asyncio.AsyncIOMotorClient('mongodb', 27017)
-
-
-class Person(BaseModel):
-    name: str
-    phone: Optional[str] = None
-
-
-# https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
-async def do_insert(person: Person):
-    document = {
-        "name": person.name,
-        "phone": person.phone
-    }
-    result = await client.insight_test.person.insert_one(document)
-    return "result", repr(result.inserted_id)
-
+# # ################ mongodb  ################
 
 @router.post("/mongo/insert")
-async def post(person: Person):
-    return await asyncio.wait_for(do_insert(person), 3.0)
-
-
-async def do_find_one(person: Person):
-    document = await client.insight_test.person.find_one({"name": person.name})
-    return document
+async def post(person: schemas.MongoData):
+    return await asyncio.wait_for(crud.mongo.do_insert(mongoClient, person), 3.0)
 
 
 @router.post("/mongo/find_one")
-async def post(person: Person):
-    x = await asyncio.wait_for(do_find_one(person), 3.0)
+async def post(person: schemas.MongoData):
+    x = await asyncio.wait_for(crud.mongo.do_find_one(mongoClient, person), 3.0)
     return {"name": x["name"], "phone": x["phone"]}
 
 
-@router.post("/mongo/find")
-async def post(person: Person):
-    return await asyncio.wait_for(do_find_one(person), 3.0)
-    # x = asyncio.create_task(await do_insert(person))
-
-
-# # implement other CRUD - # https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
-# ######################## end of mongo db ########################
-
-# ################ redis connection ################
-
-class RedisData(BaseModel):
-    key: str
-    value: Optional[str] = None
-
-
-# redisClient = redis.Redis(host='default', port=6379, db=0)
-redisClient = redis.Redis(host='redis', port=6379, db=0)
-
+# ################ redis  ################
 
 @router.post("/redis/set")
-async def post(redis_data: RedisData):
-    return redisClient.set(redis_data.key, redis_data.value)
+async def post(redis_data: schemas.RedisData):
+    return crud.redis.set(redisClient, redis_data)
 
 
 @router.post("/redis/get")
-async def post(redis_data: RedisData):
-    return redisClient.get(redis_data.key)
+async def post(redis_data: schemas.RedisData):
+    return crud.redis.get(redisClient, redis_data.key)
