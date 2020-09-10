@@ -121,16 +121,17 @@ class WebsocketConsumer(WebSocketEndpoint):
         await manager.broadcast(f"Client connected : {clientid}")
         logger.debug("Connected to websocket")
 
-        # loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
         # loop = asyncio.get_running_loop()
         logger.debug("get_event_loop completed")
         # todo: consumer above cannot start
         self.consumer = AIOKafkaConsumer(
             topicname,
-            # loop=loop,
+            loop=loop,
             client_id=PROJECT_NAME,
             bootstrap_servers="kafka:9092",
             enable_auto_commit=False,
+            api_version="2.0.1",  # adding this is necessary
         )
         logger.debug("self.consumer => AIOKafkaConsumer complete")
         # todo: consumer above cannot start
