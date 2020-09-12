@@ -4,3 +4,5 @@ docker-stack.yml
 /.idea
 /.env
 /cookiecutter-config-file.yml
+.gitsecret/keys/random_seed
+!*.secret
