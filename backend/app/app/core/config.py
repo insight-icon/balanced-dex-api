@@ -82,6 +82,15 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
 
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
+    MONGODB_HOST: str = "mongodb"
+    MONGODB_PORT: int = 27017
+
+    KAFKA_HOST_PORT: str = "kafka:9092"
+
     class Config:
         case_sensitive = True
 

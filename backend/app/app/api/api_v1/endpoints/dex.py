@@ -16,13 +16,14 @@ import redis
 import json
 
 from app import schemas, models, crud
+from app.core.config import settings
 
 router = APIRouter()
 # app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 manager = models.ConnectionManager()
-redisClient = redis.Redis(host='redis', port=6379, db=0)
-mongoClient = motor.motor_asyncio.AsyncIOMotorClient('mongodb', 27017)
+redisClient = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
 
 
 # # ################ web socket chat  ################
@@ -97,9 +98,6 @@ async def consume(consumer, topicname):
         return msg.value.decode()
 
 
-KAFKA_INSTANCE = "kafka:9092"
-PROJECT_NAME = "dex-api"
-
 @router.websocket_route("/consumer/{clientid}/{topicname}")
 class WebsocketConsumer(WebSocketEndpoint):
     """
@@ -128,8 +126,8 @@ class WebsocketConsumer(WebSocketEndpoint):
         self.consumer = AIOKafkaConsumer(
             topicname,
             loop=loop,
-            client_id=PROJECT_NAME,
-            bootstrap_servers="kafka:9092",
+            client_id=settings.PROJECT_NAME,
+            bootstrap_servers=settings.KAFKA_HOST_PORT,
             enable_auto_commit=False,
             api_version="2.0.1",  # adding this is necessary
         )
