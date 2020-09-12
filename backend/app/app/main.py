@@ -6,6 +6,15 @@ from app.core.config import settings
 from app.core.logger import Logger
 from app.core.second_middleware import SecondMiddleware
 
+# from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+#
+#
+# elasticapm = make_apm_client({
+#     'SERVICE_NAME': 'dex-api-main',
+#     'SECRET_TOKEN': 'secret-token-apm-client',
+#     'SERVER_URL': 'http://localhost:5000'
+# })
+# #============
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -21,7 +30,8 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-app.add_middleware(Logger) # todo: introduces =>   INFO:     ASGI 'lifespan' protocol appears unsupported.
+# app.add_middleware(ElasticAPM, client=elasticapm)
+app.add_middleware(Logger)  # todo: introduces =>   INFO:     ASGI 'lifespan' protocol appears unsupported.
 # app.add_middleware(SecondMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
