@@ -16,12 +16,18 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         print("send_personal_message: " + message)
-        await websocket.send_text(message)
+        try:
+            await websocket.send_text(message)
+        except:
+            self.disconnect(websocket)
 
     async def broadcast(self, message: str):
         print("broadcast:", message)
         for connection in self.active_connections:
-            await connection.send_text(message)
+            try:
+                await connection.send_text(message)
+            except:
+                self.disconnect(connection)
 
 
 # class WebSocketConnection:

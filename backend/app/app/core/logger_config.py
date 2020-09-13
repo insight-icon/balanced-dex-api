@@ -18,10 +18,7 @@ class LoggerConfig:
 
         # handler = logging.handlers.SysLogHandler(address=('localhost', 5000))
         # logger.add(handler)
-        logger.add(logstash.LogstashHandler("localhost", 5000, version=1),
-                   backtrace=True,
-                   diagnose=True
-                   )
+        logger.add(logstash.LogstashHandler("localhost", 5000, version=1))
         # for udp - logstash.LogstashHandler("localhost", 5000, version=1)
         # for tcp - logstash.TCPLogstashHandler(host, 5959, version=1)
 
