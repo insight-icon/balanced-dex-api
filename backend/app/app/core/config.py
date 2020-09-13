@@ -86,6 +86,8 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     REDIS_DB: int
 
+    REDIS_CONNECTION: str
+
     MONGODB_HOST: str
     MONGODB_PORT: int
 

@@ -2,7 +2,6 @@ from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from starlette.endpoints import WebSocketEndpoint
-# from starlette.middleware.cors import CORSMiddleware
 import asyncio
 from typing import List
 from aiokafka import AIOKafkaConsumer
@@ -12,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 import motor.motor_asyncio
 import redis
+import aioredis
 # from starlette.websockets import WebSocketDisconnect
 import json
 
@@ -21,10 +21,27 @@ from app.core.config import settings
 router = APIRouter()
 # app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
-manager = models.ConnectionManager()
-redisClient = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
+# #################### create client ####################
+manager = None
+mongoClient = None
+redisClient = None
 
+
+# @router.on_event("startup")
+async def startup():
+    global manager, mongoClient, redisClient
+    manager = models.ConnectionManager()
+    mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
+    redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
+
+
+async def shutdown():
+    global manager, mongoClient, redisClient
+    redisClient.close()
+    await redisClient.wait_closed()
+
+
+asyncio.create_task(startup())
 
 # # ################ web socket chat  ################
 @router.get("/")
@@ -185,9 +202,9 @@ async def post(person: schemas.MongoData):
 
 @router.post("/redis/set")
 async def post(redis_data: schemas.RedisData):
-    return crud.redis.set(redisClient, redis_data)
+    return await crud.redis.set(redisClient, redis_data)
 
 
 @router.post("/redis/get")
 async def post(redis_data: schemas.RedisData):
-    return crud.redis.get(redisClient, redis_data.key)
+    return await crud.redis.get(redisClient, redis_data.key)
