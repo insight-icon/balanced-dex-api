@@ -3,7 +3,7 @@
 # import string
 # import time
 # from loguru import logger
-# # from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 # class Logger(BaseHTTPMiddleware):
 #     async def dispatch(self, request, call_next):
@@ -31,10 +31,15 @@ from starlette.datastructures import URL
 from loguru import logger
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+import logging
+import logstash
+import sys
 
-class Logger:
+
+class LoggerMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
+        # logger.add("file_1.log", rotation="500 MB")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         idem = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -47,6 +52,7 @@ class Logger:
         process_time = (time.time() - start_time) * 1000
         formatted_process_time = '{0:.2f}'.format(process_time)
         logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code=XXX")
+
 
 
 ################

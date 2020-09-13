@@ -37,6 +37,7 @@ motor = "2.2.0"
 pymongo = "3.11.0"
 redis = "3.5.3"
 #
+python-logstash = "^0.4.6"
 ########
 
 
