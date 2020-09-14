@@ -2,10 +2,11 @@ from aioredis import Channel, create_connection
 from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from kafka.errors import KafkaConnectionError
 from starlette.endpoints import WebSocketEndpoint
 import asyncio
 from typing import List
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from loguru import logger
 import typing
 from pydantic import BaseModel
@@ -32,7 +33,7 @@ redisClient = None
 
 # @router.on_event("startup")
 async def startup():
-    global manager, mongoClient, redisClient, pub, sub
+    global manager, mongoClient, redisClient
     manager = models.ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
     redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
@@ -114,8 +115,39 @@ async def get_connections():
     return json.dumps(x)
 
 
-# ################ kafka topic consumer connected to a web socket  ################
+# ################ kafka topic connected to a web socket  ################
 
+# producer
+@router.websocket("/producer/{clientid}/{topicname}")
+async def publish(websocket: WebSocket, clientid: str, topicname: str):
+    await websocket.accept()
+
+    loop = asyncio.get_event_loop()
+    aioproducer = AIOKafkaProducer(
+        loop=loop,
+        client_id="client"+clientid,
+        bootstrap_servers=settings.KAFKA_INTERNAL_HOST_PORT,
+        api_version="2.0.1"
+    )
+    logger.info("aioproducer created")
+
+    try:
+        await aioproducer.start()
+        while True:
+            msg = await websocket.receive_text()
+            await aioproducer.send(topicname, json.dumps(msg).encode("ascii"))
+            print("published:", msg)
+    except WebSocketDisconnect:
+        logger.error(WebSocketDisconnect)
+    except KafkaConnectionError:
+        logger.error(WebSocketDisconnect)
+    finally:
+        await aioproducer.stop()
+        await websocket.close()
+
+
+
+# consumer
 async def consume(consumer, topicname):
     async for msg in consumer:
         print("for msg in consumer: ", msg)
@@ -150,7 +182,7 @@ class WebsocketConsumer(WebSocketEndpoint):
             topicname,
             loop=loop,
             client_id=settings.PROJECT_NAME,
-            bootstrap_servers=settings.KAFKA_HOST_PORT,
+            bootstrap_servers=settings.KAFKA_INTERNAL_HOST_PORT,
             enable_auto_commit=False,
             api_version="2.0.1",  # adding this is necessary
         )
@@ -220,9 +252,7 @@ async def post(redis_data: schemas.RedisData):
 @router.websocket("/ws/pub/{clientid}/{topic}")
 async def publish(websocket: WebSocket, clientid: int, topic: str):
     await websocket.accept()
-
-    pub = await aioredis.create_redis('redis://redis', db=2)
-
+    pub = await aioredis.create_redis(settings.REDIS_CONNECTION, db=2)
     try:
         while True:
             data = await websocket.receive_text()
@@ -236,10 +266,9 @@ async def publish(websocket: WebSocket, clientid: int, topic: str):
 @router.websocket("/ws/sub/{clientid}/{topic}")
 async def subscribe(websocket: WebSocket, clientid: int, topic: str):
     await websocket.accept()
-    sub = await aioredis.create_redis('redis://redis', db=2)
+    sub = await aioredis.create_redis(settings.REDIS_CONNECTION, db=2)
     res = await sub.subscribe(topic)
     ch = res[0]
-
     try:
         while await ch.wait_message():
             msg = await ch.get_json()
@@ -251,101 +280,3 @@ async def subscribe(websocket: WebSocket, clientid: int, topic: str):
         sub.close()
         await websocket.close()
 
-
-    # sub.unsubscribe(topic)
-    # websocket.close()
-    # sub.close()
-
-# async def publish_to_redis(msg, path):
-#     # # Connect to Redis
-#     publisher = await create_connection(settings.REDIS_CONNECTION, db=1)
-#     # publisher = await aioredis.create_redis(settings.REDIS_CONNECTION)
-#
-#     # Publish to channel "lightlevel{path}"
-#     return await publisher.execute('publish', 'lightlevel{}'.format(path), msg)
-#
-#
-# @router.websocket("/ws/pub/{clientid}/{topic}")
-# async def publish(websocket: WebSocket, clientid: int, topic: str):
-#     await websocket.accept()
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-#             await publish_to_redis(data, topic)
-#             logger.info(f"data - {data}, to topic - {topic}")
-#     except WebSocketDisconnect:
-#         websocket.close()
-#         logger.info(f"PUB Connection close - clientid - {clientid}, topic - {topic}")
-# # ###    ####    ####
-#
-#
-# async def subscribe_to_redis(topic):
-#
-#     # subscriber = await create_connection(settings.REDIS_CONNECTION, db=1)
-#     subscriber = await aioredis.create_redis(settings.REDIS_CONNECTION, db=1)
-#     logger.info("subscriber connection done")
-#     res = await subscriber.subscribe(topic)
-#     ch1 = res[0]
-#
-#     return ch1, subscriber
-#     # res
-#     # # Set up a subscribe channel
-#     # channel = Channel('lightlevel{}'.format(topic), is_pattern=False, loop=asyncio.get_event_loop())
-#     # logger.info("channel created")
-#     # await subscriber.execute_pubsub('subscribe', channel)
-#     # logger.info("subscriber.execute_pubsub done")
-#     # return channel, subscriber
-#
-#
-# # async def reader(ch):
-# #     while (await ch.wait_message()):
-# #         msg = await ch.get_json()
-# #         print("Got Message:", msg)
-#
-#
-# @router.websocket("/ws/sub/{clientid}/{topic}")
-# async def subscribe(websocket: WebSocket, clientid: int, topic: str):
-#     await websocket.accept()
-#
-#     channel, subscriber = await subscribe_to_redis(topic)
-#     try:
-#         while await channel.wait_message():
-#             logger.info("await channel.get_json()")
-#             msg = await channel.get_json()
-#             logger.info(f"Got Message: {msg}")
-#             # await websocket.send(msg.decode('utf-8'))
-#     except WebSocketDisconnect:
-#         websocket.close()
-#         logger.info(f"SUB Connection close - clientid - {clientid}, topic - {topic}")
-#         await subscriber.unsubscribe(topic)
-#         subscriber.close()
-#
-#     # try:
-#     #     while True:
-#     #         tsk = asyncio.ensure_future(reader(channel))
-#     #         await websocket.send(tsk.decode('utf-8'))
-#     #         logger.info("websocket.send(message.decode('utf-8')) ########")
-#     # except WebSocketDisconnect:
-#     #     logger.info(f"Connection close - clientid - {clientid}, topic - {topic}")
-#     #     await subscriber.execute_pubsub('unsubscribe', channel)
-#     #     subscriber.close()
-#
-#
-#     # logger.info(f"Clientid - {clientid} Subscribed to topic - {topic}")
-#     # channel, subscriber = await subscribe_to_redis(topic)
-#     # logger.info("return channel, subscriber")
-#     # try:
-#     #     while True:
-#     #         # Wait until data is published to this channel
-#     #         logger.info("###### while True started...")
-#     #         message = await channel.get()
-#     #         logger.info("return channel.get()")
-#     #
-#     #         # Send unicode decoded data over to the websocket client
-#     #         await websocket.send(message.decode('utf-8'))
-#     #         logger.info("websocket.send(message.decode('utf-8')) ########")
-#     #
-#     # except WebSocketDisconnect:
-#     #     # Free up channel if websocket goes down
-#     #     await subscriber.execute_pubsub('unsubscribe', channel)
-#     #     subscriber.close()

@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     MONGODB_HOST: str
     MONGODB_PORT: int
 
-    KAFKA_HOST_PORT: str
+    KAFKA_INTERNAL_HOST_PORT: str
 
     class Config:
         case_sensitive = True
