@@ -1,3 +1,4 @@
+from aioredis import Channel, create_connection
 from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -21,18 +22,22 @@ from app.core.config import settings
 router = APIRouter()
 # app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
-# #################### create client ####################
+# #################### create clients ####################
 manager = None
 mongoClient = None
 redisClient = None
+# pub = None
+# sub = None
 
 
 # @router.on_event("startup")
 async def startup():
-    global manager, mongoClient, redisClient
+    global manager, mongoClient, redisClient, pub, sub
     manager = models.ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
     redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
+    # pub = await aioredis.create_redis(settings.REDIS_CONNECTION)
+    # sub = await aioredis.create_redis(settings.REDIS_CONNECTION)
 
 
 async def shutdown():
@@ -43,10 +48,12 @@ async def shutdown():
 
 asyncio.create_task(startup())
 
+
 # # ################ web socket chat  ################
 @router.get("/")
 async def get():
     return HTMLResponse(html)
+
 
 html = """
 <!DOCTYPE html>
@@ -123,7 +130,6 @@ class WebsocketConsumer(WebSocketEndpoint):
     And this path operation will:
     * return ConsumerResponse
     """
-
 
     async def on_connect(self, websocket: WebSocket) -> None:
         logger.debug("Inside on_connect for topic consumption")
@@ -208,3 +214,138 @@ async def post(redis_data: schemas.RedisData):
 @router.post("/redis/get")
 async def post(redis_data: schemas.RedisData):
     return await crud.redis.get(redisClient, redis_data.key)
+
+
+# ################## redis pub-sub to scale websocket
+@router.websocket("/ws/pub/{clientid}/{topic}")
+async def publish(websocket: WebSocket, clientid: int, topic: str):
+    await websocket.accept()
+
+    pub = await aioredis.create_redis('redis://redis', db=2)
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            res = await pub.publish_json(topic, [data])
+            print("published:", res)
+    except WebSocketDisconnect:
+        await websocket.close()
+        pub.close()
+
+
+@router.websocket("/ws/sub/{clientid}/{topic}")
+async def subscribe(websocket: WebSocket, clientid: int, topic: str):
+    await websocket.accept()
+    sub = await aioredis.create_redis('redis://redis', db=2)
+    res = await sub.subscribe(topic)
+    ch = res[0]
+
+    try:
+        while await ch.wait_message():
+            msg = await ch.get_json()
+            logger.info(f"Got Message: {msg}")
+            await websocket.send_text(msg)
+    except:
+        logger.info(f"WebSocketDisconnect")
+        sub.unsubscribe(topic)
+        sub.close()
+        await websocket.close()
+
+
+    # sub.unsubscribe(topic)
+    # websocket.close()
+    # sub.close()
+
+# async def publish_to_redis(msg, path):
+#     # # Connect to Redis
+#     publisher = await create_connection(settings.REDIS_CONNECTION, db=1)
+#     # publisher = await aioredis.create_redis(settings.REDIS_CONNECTION)
+#
+#     # Publish to channel "lightlevel{path}"
+#     return await publisher.execute('publish', 'lightlevel{}'.format(path), msg)
+#
+#
+# @router.websocket("/ws/pub/{clientid}/{topic}")
+# async def publish(websocket: WebSocket, clientid: int, topic: str):
+#     await websocket.accept()
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
+#             await publish_to_redis(data, topic)
+#             logger.info(f"data - {data}, to topic - {topic}")
+#     except WebSocketDisconnect:
+#         websocket.close()
+#         logger.info(f"PUB Connection close - clientid - {clientid}, topic - {topic}")
+# # ###    ####    ####
+#
+#
+# async def subscribe_to_redis(topic):
+#
+#     # subscriber = await create_connection(settings.REDIS_CONNECTION, db=1)
+#     subscriber = await aioredis.create_redis(settings.REDIS_CONNECTION, db=1)
+#     logger.info("subscriber connection done")
+#     res = await subscriber.subscribe(topic)
+#     ch1 = res[0]
+#
+#     return ch1, subscriber
+#     # res
+#     # # Set up a subscribe channel
+#     # channel = Channel('lightlevel{}'.format(topic), is_pattern=False, loop=asyncio.get_event_loop())
+#     # logger.info("channel created")
+#     # await subscriber.execute_pubsub('subscribe', channel)
+#     # logger.info("subscriber.execute_pubsub done")
+#     # return channel, subscriber
+#
+#
+# # async def reader(ch):
+# #     while (await ch.wait_message()):
+# #         msg = await ch.get_json()
+# #         print("Got Message:", msg)
+#
+#
+# @router.websocket("/ws/sub/{clientid}/{topic}")
+# async def subscribe(websocket: WebSocket, clientid: int, topic: str):
+#     await websocket.accept()
+#
+#     channel, subscriber = await subscribe_to_redis(topic)
+#     try:
+#         while await channel.wait_message():
+#             logger.info("await channel.get_json()")
+#             msg = await channel.get_json()
+#             logger.info(f"Got Message: {msg}")
+#             # await websocket.send(msg.decode('utf-8'))
+#     except WebSocketDisconnect:
+#         websocket.close()
+#         logger.info(f"SUB Connection close - clientid - {clientid}, topic - {topic}")
+#         await subscriber.unsubscribe(topic)
+#         subscriber.close()
+#
+#     # try:
+#     #     while True:
+#     #         tsk = asyncio.ensure_future(reader(channel))
+#     #         await websocket.send(tsk.decode('utf-8'))
+#     #         logger.info("websocket.send(message.decode('utf-8')) ########")
+#     # except WebSocketDisconnect:
+#     #     logger.info(f"Connection close - clientid - {clientid}, topic - {topic}")
+#     #     await subscriber.execute_pubsub('unsubscribe', channel)
+#     #     subscriber.close()
+#
+#
+#     # logger.info(f"Clientid - {clientid} Subscribed to topic - {topic}")
+#     # channel, subscriber = await subscribe_to_redis(topic)
+#     # logger.info("return channel, subscriber")
+#     # try:
+#     #     while True:
+#     #         # Wait until data is published to this channel
+#     #         logger.info("###### while True started...")
+#     #         message = await channel.get()
+#     #         logger.info("return channel.get()")
+#     #
+#     #         # Send unicode decoded data over to the websocket client
+#     #         await websocket.send(message.decode('utf-8'))
+#     #         logger.info("websocket.send(message.decode('utf-8')) ########")
+#     #
+#     # except WebSocketDisconnect:
+#     #     # Free up channel if websocket goes down
+#     #     await subscriber.execute_pubsub('unsubscribe', channel)
+#     #     subscriber.close()
