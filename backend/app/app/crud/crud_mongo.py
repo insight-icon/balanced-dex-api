@@ -4,17 +4,13 @@ from app import schemas
 class CRUDMongo:
 
     @staticmethod
-    async def do_insert(mongo_client, person: schemas.MongoData):
-        document = {
-            "name": person.name,
-            "phone": person.phone
-        }
-        result = await mongo_client.insight_test.person.insert_one(document)
-        return "result", repr(result.inserted_id)
+    async def do_insert(mongo_client, mongodata: schemas.MongoData):
+        result = await mongo_client.insight_test.person.insert_one(mongodata.dict())
+        return repr(result.inserted_id)
 
     @staticmethod
-    async def do_find_one(mongo_client, person: schemas.MongoData):
-        document = await mongo_client.insight_test.person.find_one({"name": person.name})
+    async def do_find_one(mongo_client, mongodata: schemas.MongoData):
+        document = await mongo_client.insight_test.person.find_one({"name": mongodata.name})
         return document
 
 

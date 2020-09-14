@@ -82,9 +82,9 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
+    # REDIS_HOST: str
+    # REDIS_PORT: int
+    # REDIS_DB: int
 
     REDIS_CONNECTION: str
 
