@@ -113,41 +113,41 @@ services:
         # to disable www redirection remove the section: ${STACK_NAME?Variable not set}-www-redirect,
         - traefik.http.routers.${STACK_NAME?Variable not set}-proxy-http.middlewares=${STACK_NAME?Variable not set}-www-redirect,${STACK_NAME?Variable not set}-https-redirect
   
-  db:
-    image: postgres:12
-    volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
-    env_file:
-      - .env
-    environment:
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    deploy:
-      placement:
-        constraints:
-          - node.labels.${STACK_NAME?Variable not set}.app-db-data == true
+#  db:
+#    image: postgres:12
+#    volumes:
+#      - app-db-data:/var/lib/postgresql/data/pgdata
+#    env_file:
+#      - .env
+#    environment:
+#      - PGDATA=/var/lib/postgresql/data/pgdata
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.${STACK_NAME?Variable not set}.app-db-data == true
 
-  pgadmin:
-    image: dpage/pgadmin4
-    networks:
-      - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
-      - default
-    depends_on:
-      - db
-    env_file:
-      - .env
-    deploy:
-      labels:
-        - traefik.enable=true
-        - traefik.docker.network=${TRAEFIK_PUBLIC_NETWORK?Variable not set}
-        - traefik.constraint-label=${TRAEFIK_PUBLIC_TAG?Variable not set}
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.rule=Host(`pgadmin.${DOMAIN?Variable not set}`)
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.entrypoints=http
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.middlewares=${STACK_NAME?Variable not set}-https-redirect
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.rule=Host(`pgadmin.${DOMAIN?Variable not set}`)
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.entrypoints=https
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.tls=true
-        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.tls.certresolver=le
-        - traefik.http.services.${STACK_NAME?Variable not set}-pgadmin.loadbalancer.server.port=5050
+#  pgadmin:
+#    image: dpage/pgadmin4
+#    networks:
+#      - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
+#      - default
+#    depends_on:
+#      - db
+#    env_file:
+#      - .env
+#    deploy:
+#      labels:
+#        - traefik.enable=true
+#        - traefik.docker.network=${TRAEFIK_PUBLIC_NETWORK?Variable not set}
+#        - traefik.constraint-label=${TRAEFIK_PUBLIC_TAG?Variable not set}
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.rule=Host(`pgadmin.${DOMAIN?Variable not set}`)
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.entrypoints=http
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-http.middlewares=${STACK_NAME?Variable not set}-https-redirect
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.rule=Host(`pgadmin.${DOMAIN?Variable not set}`)
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.entrypoints=https
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.tls=true
+#        - traefik.http.routers.${STACK_NAME?Variable not set}-pgadmin-https.tls.certresolver=le
+#        - traefik.http.services.${STACK_NAME?Variable not set}-pgadmin.loadbalancer.server.port=5050
 
 
 #  queue:
@@ -185,8 +185,8 @@ services:
 #
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    depends_on:
-      - db
+#    depends_on:
+#      - db
     env_file:
       - .env
     environment:

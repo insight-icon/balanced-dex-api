@@ -178,7 +178,6 @@ class WebsocketConsumer(WebSocketEndpoint):
         loop = asyncio.get_event_loop()
         # loop = asyncio.get_running_loop()
         logger.debug("get_event_loop completed")
-        # todo: consumer above cannot start
         self.consumer = AIOKafkaConsumer(
             topicname,
             loop=loop,
@@ -188,7 +187,6 @@ class WebsocketConsumer(WebSocketEndpoint):
             api_version="2.0.1",  # adding this is necessary
         )
         logger.debug("self.consumer => AIOKafkaConsumer complete")
-        # todo: consumer above cannot start
         await self.consumer.start()
         logger.debug("await self.consumer.start() complete")
 
@@ -284,7 +282,7 @@ async def subscribe(websocket: WebSocket, clientid: int, topic: str):
             msg = await ch.get_json()
             logger.info(f"Got Message: {msg}")
             await websocket.send_text(msg)
-    except:
+    except:  # todo: resolve issue - handle socket close (currently waits for 'pub' to send msg before throwing ConnectionForcedCloseError())
         logger.info(f"WebSocketDisconnect")
         sub.unsubscribe(topic)
         sub.close()
