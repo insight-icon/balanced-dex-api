@@ -16,6 +16,7 @@ import redis
 import aioredis
 # from starlette.websockets import WebSocketDisconnect
 import json
+from bson.json_util import dumps
 
 from app import schemas, models, crud
 from app.core.config import settings
@@ -226,14 +227,23 @@ class WebsocketConsumer(WebSocketEndpoint):
 # # ################ mongodb  ################
 
 @router.post("/mongo/insert")
-async def post(person: schemas.MongoData):
-    return await asyncio.wait_for(crud.mongo.do_insert(mongoClient, person), 3.0)
+async def post(mongo_data: schemas.MongoData):
+    return await asyncio.wait_for(crud.mongo.do_insert(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
 
 
 @router.post("/mongo/find_one")
-async def post(person: schemas.MongoData):
-    x = await asyncio.wait_for(crud.mongo.do_find_one(mongoClient, person), 3.0)
-    return {"name": x["name"], "phone": x["phone"]}
+async def post(mongo_data: schemas.MongoData):
+    result = await asyncio.wait_for(crud.mongo.do_find_one(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
+    # return {"name": x["name"], "phone": x["phone"]}
+    return str(result)
+
+
+@router.post("/mongo/find")
+async def post(mongo_data: schemas.MongoData):
+    results = await asyncio.wait_for(crud.mongo.do_find(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
+    # return {"name": x["name"], "phone": x["phone"]}
+    return str(results)
+
 
 
 # ################ redis  ################

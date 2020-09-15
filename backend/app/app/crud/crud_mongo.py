@@ -1,17 +1,33 @@
 from app import schemas
 
+
 # # implement other CRUD - # https://motor.readthedocs.io/en/stable/tutorial-asyncio.html
 class CRUDMongo:
 
     @staticmethod
-    async def do_insert(mongo_client, mongodata: schemas.MongoData):
-        result = await mongo_client.insight_test.person.insert_one(mongodata.dict())
+    async def do_insert(mongo_client, database_name: str, collection_name: str, mongodata: schemas.MongoData):
+        db = mongo_client[database_name]
+        collection = db[collection_name]
+        result = await collection.insert_one(mongodata.dict())
         return repr(result.inserted_id)
 
     @staticmethod
-    async def do_find_one(mongo_client, mongodata: schemas.MongoData):
-        document = await mongo_client.insight_test.person.find_one({"name": mongodata.name})
+    async def do_find_one(mongo_client, database_name: str, collection_name: str, mongodata: schemas.MongoData):
+        db = mongo_client[database_name]
+        collection = db[collection_name]
+        document = await collection.find_one({"name": mongodata.name})
         return document
+
+    @staticmethod
+    async def do_find(mongo_client, database_name: str, collection_name: str, mongodata: schemas.MongoData):
+        db = mongo_client[database_name]
+        collection = db[collection_name]
+        cursor = collection.find({"name": mongodata.name})
+        cursor.limit(10)
+        result = []
+        async for document in cursor:
+            result.append(document)
+        return result
 
 
 mongo = CRUDMongo()
