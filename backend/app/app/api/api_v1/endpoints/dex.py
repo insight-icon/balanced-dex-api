@@ -259,7 +259,7 @@ async def post(redis_data: schemas.RedisData):
 
 
 # ################## redis pub-sub to scale websocket
-@router.websocket("/ws/pub/{clientid}/{topic}")
+@router.websocket("/pub/{clientid}/{topic}")
 async def publish(websocket: WebSocket, clientid: int, topic: str):
     await websocket.accept()
     pub = await aioredis.create_redis(settings.REDIS_CONNECTION, db=2)
@@ -273,7 +273,7 @@ async def publish(websocket: WebSocket, clientid: int, topic: str):
         pub.close()
 
 
-@router.websocket("/ws/sub/{clientid}/{topic}")
+@router.websocket("/sub/{clientid}/{topic}")
 async def subscribe(websocket: WebSocket, clientid: int, topic: str):
     await websocket.accept()
     sub = await aioredis.create_redis(settings.REDIS_CONNECTION, db=2)
