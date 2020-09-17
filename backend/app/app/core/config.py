@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
-    SERVER_NAME: str
-    SERVER_HOST: AnyHttpUrl
+    SERVER_NAME: str = "server_name"
+    SERVER_HOST: AnyHttpUrl = "http://127.0.0.1"
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
@@ -24,8 +24,8 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    PROJECT_NAME: str
-    SENTRY_DSN: Optional[HttpUrl] = None
+    PROJECT_NAME: str = "balanced-dex-api"
+    SENTRY_DSN: Optional[HttpUrl] = "http://127.0.0.1"  # None
 
     @validator("SENTRY_DSN", pre=True)
     def sentry_dsn_can_be_blank(cls, v: str) -> Optional[str]:
@@ -33,23 +33,23 @@ class Settings(BaseSettings):
             return None
         return v
 
-    POSTGRES_SERVER: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    # POSTGRES_SERVER: str
+    # POSTGRES_USER: str
+    # POSTGRES_PASSWORD: str
+    # POSTGRES_DB: str
+    # SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
-        if isinstance(v, str):
-            return v
-        return PostgresDsn.build(
-            scheme="postgresql",
-            user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
-            host=values.get("POSTGRES_SERVER"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
-        )
+    # @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    # def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    #     if isinstance(v, str):
+    #         return v
+    #     return PostgresDsn.build(
+    #         scheme="postgresql",
+    #         user=values.get("POSTGRES_USER"),
+    #         password=values.get("POSTGRES_PASSWORD"),
+    #         host=values.get("POSTGRES_SERVER"),
+    #         path=f"/{values.get('POSTGRES_DB') or ''}",
+    #     )
 
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
@@ -61,6 +61,8 @@ class Settings(BaseSettings):
 
     @validator("EMAILS_FROM_NAME")
     def get_project_name(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+        # print("get_project_name:::::::")
+        # print(values)
         if not v:
             return values["PROJECT_NAME"]
         return v
@@ -78,20 +80,16 @@ class Settings(BaseSettings):
         )
 
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
+    # FIRST_SUPERUSER: EmailStr
+    # FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
 
-    # REDIS_HOST: str
-    # REDIS_PORT: int
-    # REDIS_DB: int
+    REDIS_CONNECTION: str = "redis://redis:6379"
 
-    REDIS_CONNECTION: str
+    MONGODB_HOST: str = "mongodb"
+    MONGODB_PORT: int = 27017
 
-    MONGODB_HOST: str
-    MONGODB_PORT: int
-
-    KAFKA_INTERNAL_HOST_PORT: str
+    KAFKA_INTERNAL_HOST_PORT: str = "kafka:19092"
 
     class Config:
         case_sensitive = True

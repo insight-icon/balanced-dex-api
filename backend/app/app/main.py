@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logger_middleware import LoggerMiddleware
 
 from app.core.logger_config import LoggerConfig
-
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -24,6 +24,10 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-app.add_middleware(LoggerMiddleware)  # todo: introduces =>   INFO:     ASGI 'lifespan' protocol appears unsupported.
+
+# todo: introduces =>   INFO:     ASGI 'lifespan' protocol appears unsupported.
+# todo: which in turn is causing test fixture for getting client to fail
+# app.add_middleware(LoggerMiddleware)
+
 
 app.include_router(api_router, prefix=settings.API_V1_STR)

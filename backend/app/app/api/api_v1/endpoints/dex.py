@@ -22,14 +22,11 @@ from app import schemas, models, crud
 from app.core.config import settings
 
 router = APIRouter()
-# app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 # #################### create clients ####################
 manager = None
 mongoClient = None
 redisClient = None
-# pub = None
-# sub = None
 
 
 # @router.on_event("startup")
@@ -37,18 +34,20 @@ async def startup():
     global manager, mongoClient, redisClient
     manager = models.ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
+    # redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
     redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
-    # pub = await aioredis.create_redis(settings.REDIS_CONNECTION)
-    # sub = await aioredis.create_redis(settings.REDIS_CONNECTION)
 
 
+# @router.on_event("shutdown")
 async def shutdown():
     global manager, mongoClient, redisClient
     redisClient.close()
     await redisClient.wait_closed()
 
 
-asyncio.create_task(startup())
+# asyncio.wait_for(asyncio.create_task(startup()), 10)
+asyncio.wait_for(startup(), 10)
+# asyncio.create_task(startup())
 
 
 # # ################ web socket chat  ################
@@ -126,7 +125,7 @@ async def publish(websocket: WebSocket, clientid: str, topicname: str):
     loop = asyncio.get_event_loop()
     aioproducer = AIOKafkaProducer(
         loop=loop,
-        client_id="client"+clientid,
+        client_id="client" + clientid,
         bootstrap_servers=settings.KAFKA_INTERNAL_HOST_PORT,
         api_version="2.0.1"
     )
@@ -145,7 +144,6 @@ async def publish(websocket: WebSocket, clientid: str, topicname: str):
     finally:
         await aioproducer.stop()
         await websocket.close()
-
 
 
 # consumer
@@ -171,8 +169,9 @@ class WebsocketConsumer(WebSocketEndpoint):
         topicname = websocket["path"].split("/")[6]  # until I figure out an alternative
         logger.debug("topicname:" + topicname)
         logger.debug("Going to connect to websocket")
-        await manager.connect(websocket)
-        await manager.broadcast(f"Client connected : {clientid}")
+        # await manager.connect(websocket)
+        # await manager.broadcast(f"Client connected : {clientid}")
+        await websocket.accept()
         logger.debug("Connected to websocket")
 
         loop = asyncio.get_event_loop()
@@ -197,8 +196,9 @@ class WebsocketConsumer(WebSocketEndpoint):
 
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
         clientid = websocket["path"].split("/")[2]
-        manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{clientid} left")
+        # manager.disconnect(websocket)
+        # await manager.broadcast(f"Client #{clientid} left")
+        await websocket.close()
 
         self.consumer_task.cancel()
         await self.consumer.stop()
@@ -208,8 +208,12 @@ class WebsocketConsumer(WebSocketEndpoint):
 
     async def on_receive(self, websocket: WebSocket, data: typing.Any) -> None:
         clientid = websocket["path"].split("/")[2]
-        await manager.send_personal_message(f"You wrote: {data}", websocket)
-        await manager.broadcast(f"Client #{clientid} says: {data}")
+        try:
+            await websocket.send_text(f"I wrote: {data}")
+        except:
+            self.disconnect(websocket)
+        # await manager.send_personal_message(f"You wrote: {data}", websocket)
+        # await manager.broadcast(f"Client #{clientid} says: {data}")
 
     async def send_consumer_message(self, websocket: WebSocket, topicname: str) -> None:
         self.counter = 0
@@ -241,7 +245,6 @@ async def post(mongo_data: schemas.MongoData):
     results = await asyncio.wait_for(crud.mongo.do_find(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
     # return {"name": x["name"], "phone": x["phone"]}
     return str(results)
-
 
 
 # ################ redis  ################
@@ -287,4 +290,3 @@ async def subscribe(websocket: WebSocket, clientid: int, topic: str):
         sub.unsubscribe(topic)
         sub.close()
         await websocket.close()
-

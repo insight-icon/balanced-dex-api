@@ -12,24 +12,23 @@ import logstash
 import sys
 
 
-async def log_requests(request: Request, call_next):
-    idem = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    logger.info(f"rid={idem} start request path={request.url.path}")
-    start_time = time.time()
-
-    response = await call_next(request)
-
-    process_time = (time.time() - start_time) * 1000
-    formatted_process_time = '{0:.2f}'.format(process_time)
-    logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code={response.status_code}")
-
-    return response
+# async def log_requests(request: Request, call_next):
+#     idem = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+#     logger.info(f"rid={idem} start request path={request.url.path}")
+#     start_time = time.time()
+#
+#     response = await call_next(request)
+#
+#     process_time = (time.time() - start_time) * 1000
+#     formatted_process_time = '{0:.2f}'.format(process_time)
+#     logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code={response.status_code}")
+#
+#     return response
 
 
 class LoggerMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
-        # logger.add("file_1.log", rotation="500 MB")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         idem = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
