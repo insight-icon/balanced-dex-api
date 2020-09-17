@@ -6,3 +6,7 @@ docker-stack.yml
 /cookiecutter-config-file.yml
 .gitsecret/keys/random_seed
 !*.secret
+
+
+env
+venv
