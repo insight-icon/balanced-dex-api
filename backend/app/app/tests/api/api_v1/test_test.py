@@ -10,7 +10,6 @@ def test_test1(
 ) -> None:
     response = TestClient(app).get(f"{settings.API_V1_STR}/dex/")
     assert response.status_code == 200
-    input_value = 39
     assert input_value == 39
 
 
@@ -20,5 +19,4 @@ def test_test(
 ) -> None:
     response = client.get(f"{settings.API_V1_STR}/dex/")
     assert response.status_code == 200
-    input_value = 39
     assert input_value == 39

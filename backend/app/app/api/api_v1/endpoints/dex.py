@@ -45,9 +45,10 @@ async def shutdown():
     await redisClient.wait_closed()
 
 
+
 # asyncio.wait_for(asyncio.create_task(startup()), 10)
-asyncio.wait_for(startup(), 10)
-# asyncio.create_task(startup())
+# asyncio.wait_for(startup(), 10)
+asyncio.create_task(startup())
 
 
 # # ################ web socket chat  ################
