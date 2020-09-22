@@ -1,11 +1,9 @@
 import json
-from operator import __or__
-
 from app.models.orders import OrderCreate
 from app.models.schema_registry import new_schema_registry
 from pydantic import BaseModel
 from app.core.config import settings
-# from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 import http.client
 
 
@@ -21,7 +19,7 @@ def test_register_schema_registry() -> None:
     _id = "scv_id"
     _description = "Sample schema to help you get started."
     _key_or_value = "value"
-    _topic = "test6"  # OrderCreate.__name__
+    _topic = "test7"  # OrderCreate.__name__
     _cls = OrderCreate
 
     schema_registry = new_schema_registry(
@@ -44,7 +42,7 @@ def test_register_schema_registry() -> None:
 
 def test_delete_schema_registry_by_subject() -> None:
     _key_or_value = "value"
-    _topic = "test5"
+    _topic = "test7"
 
     conn = http.client.HTTPConnection("127.0.0.1", 8081)
     conn.request("DELETE", f"/subjects/{_topic}-{_key_or_value}")
@@ -58,3 +56,4 @@ def test_delete_schema_registry_by_subject() -> None:
         error = response_dict["error_code"]
         print(f"error_code:{error}")
         assert error == 40404 or 40401
+
