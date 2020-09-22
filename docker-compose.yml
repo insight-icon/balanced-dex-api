@@ -2,7 +2,7 @@ version: "3.3"
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.0.1-1
+    image: confluentinc/cp-zookeeper:5.5.1
     ports:
       - "127.0.0.1:2181:2181"
     environment:
@@ -12,7 +12,7 @@ services:
       - default
 
   kafka:
-    image: confluentinc/cp-kafka:5.0.1-1
+    image: confluentinc/cp-kafka:5.5.1
     depends_on:
       - zookeeper
     ports:
@@ -31,7 +31,7 @@ services:
 
 # #
   schema-registry:
-    image: confluentinc/cp-schema-registry:5.4.0
+    image: confluentinc/cp-schema-registry:5.5.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -48,7 +48,7 @@ services:
       - default
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:5.4.0
+    image: confluentinc/cp-enterprise-control-center:5.5.1
     hostname: control-center
     container_name: control-center
     depends_on:
