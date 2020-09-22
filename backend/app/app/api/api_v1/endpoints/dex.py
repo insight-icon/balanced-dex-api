@@ -18,8 +18,10 @@ import aioredis
 import json
 from bson.json_util import dumps
 
-from app import schemas, models, crud
+
+from app import models, crud
 from app.core.config import settings
+
 
 router = APIRouter()
 
@@ -34,7 +36,6 @@ async def startup():
     global manager, mongoClient, redisClient
     manager = models.ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
-    # redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
     redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
 
 
@@ -46,9 +47,11 @@ async def shutdown():
 
 
 
-# asyncio.wait_for(asyncio.create_task(startup()), 10)
-# asyncio.wait_for(startup(), 10)
-asyncio.create_task(startup())
+# # asyncio.wait_for(asyncio.create_task(startup()), 10)
+# # asyncio.wait_for(startup(), 10)
+# asyncio.create_task(startup())
+router.add_event_handler("startup", startup)
+router.add_event_handler("shutdown", shutdown)
 
 
 # # ################ web socket chat  ################
@@ -230,19 +233,19 @@ class WebsocketConsumer(WebSocketEndpoint):
 # # ################ mongodb  ################
 
 @router.post("/mongo/insert")
-async def post(mongo_data: schemas.MongoData):
+async def post(mongo_data: models.MongoData):
     return await asyncio.wait_for(crud.mongo.do_insert(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
 
 
 @router.post("/mongo/find_one")
-async def post(mongo_data: schemas.MongoData):
+async def post(mongo_data: models.MongoData):
     result = await asyncio.wait_for(crud.mongo.do_find_one(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
     # return {"name": x["name"], "phone": x["phone"]}
     return str(result)
 
 
 @router.post("/mongo/find")
-async def post(mongo_data: schemas.MongoData):
+async def post(mongo_data: models.MongoData):
     results = await asyncio.wait_for(crud.mongo.do_find(mongoClient, 'insight_test', 'person', mongo_data), 3.0)
     # return {"name": x["name"], "phone": x["phone"]}
     return str(results)
@@ -250,14 +253,14 @@ async def post(mongo_data: schemas.MongoData):
 
 # ################ redis  ################
 
-@router.post("/redis/set")
-async def post(redis_data: schemas.RedisData):
-    return await crud.redis.set(redisClient, redis_data)
-
-
-@router.post("/redis/get")
-async def post(redis_data: schemas.RedisData):
-    return await crud.redis.get(redisClient, redis_data.key)
+# @router.post("/redis/set")
+# async def post(redis_data: models.RedisData):
+#     return await crud.redis.set(redisClient, redis_data)
+#
+#
+# @router.post("/redis/get")
+# async def post(redis_data: models.RedisData):
+#     return await crud.redis.get(redisClient, redis_data.key)
 
 
 # ################## redis pub-sub to scale websocket

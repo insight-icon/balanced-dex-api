@@ -1,10 +1,10 @@
-from app import schemas
+from app import models
 
 
 class CRUDRedis:
 
     @staticmethod
-    async def set(redis_client, redis_data: schemas.RedisData):
+    async def set(redis_client, redis_data: models.RedisData):
         return await redis_client.set(redis_data.key, redis_data.value)
 
     @staticmethod

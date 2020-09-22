@@ -56,7 +56,7 @@ def create_OrderCreate() -> OrderCreate:
         market="ICX",
         price=90,
         size=17,
-        user=Address(address="asdasdas"),
+        user="asdasdas",
     )
 
 @router.get("/start")
