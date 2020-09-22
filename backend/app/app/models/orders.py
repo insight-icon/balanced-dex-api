@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .rwmodel import RWModel
 from pydantic import BaseModel
 
@@ -11,14 +13,14 @@ class OrderCreate(RWModel):
     market: str
     price: int
     size: int
-    user: Address
+    user: str
 
 
 class OrderRest(RWModel):
     order_id: int
     price: int
     size: int
-    user: Address
+    user: str
 
 
 class OrderCancel(RWModel):
@@ -26,14 +28,14 @@ class OrderCancel(RWModel):
     market: str
     price: int
     size: int
-    user: Address
+    user: str
 
 
 class Trade(RWModel):
     market: str
     price: int
     size: int
-    maker: Address
+    maker: str
     maker_order: int
-    taker: Address
+    taker: str
     taker_order: int
