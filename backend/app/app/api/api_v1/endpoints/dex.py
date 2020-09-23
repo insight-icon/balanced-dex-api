@@ -36,7 +36,7 @@ async def startup():
     global manager, mongoClient, redisClient
     manager = models.ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
-    redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
+    # redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
 
 
 # @router.on_event("shutdown")
@@ -51,7 +51,7 @@ async def shutdown():
 # # asyncio.wait_for(startup(), 10)
 # asyncio.create_task(startup())
 router.add_event_handler("startup", startup)
-router.add_event_handler("shutdown", shutdown)
+# router.add_event_handler("shutdown", shutdown)
 
 
 # # ################ web socket chat  ################

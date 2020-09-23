@@ -5,7 +5,7 @@ import asyncio
 from typing import Dict
 
 from aiokafka import AIOKafkaProducer
-from app.models.orders import OrderCreate, Address
+from app.models.orders import OrderCreate
 from app.models.rwmodel import RWModel
 from fastapi import APIRouter
 from loguru import logger
@@ -43,11 +43,10 @@ router.add_event_handler("startup", init)
 @router.get("/")
 async def index():
     options = dict()
-    options["/start"] = "start producing mock events"
-    options["/run_once"] = "produce 1 mock event"
-    options["/run"] = "produce mock events at regular interval"
-    options["/stop"] = "stop producing mock events"
-    return options
+    options["/start"] = "start producing mock events"  # todo: remove"
+    options["/run_once"] = "produce 1 mock event"  # todo: remove
+    options["/run"] = "produce mock events at regular interval"  # todo: change to be ready "receive event to api and produce to a topic"
+    options["/stop"] = "stop producing mock events"  # todo: remove
 
 
 def create_OrderCreate() -> OrderCreate:

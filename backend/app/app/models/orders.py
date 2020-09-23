@@ -4,10 +4,6 @@ from .rwmodel import RWModel
 from pydantic import BaseModel
 
 
-class Address(RWModel):
-    address: str
-
-
 class OrderCreate(RWModel):
     order_id: int
     market: str
