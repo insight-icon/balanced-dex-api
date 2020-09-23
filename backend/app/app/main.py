@@ -1,3 +1,4 @@
+from app.db.db_utils import db_init, db_close
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -29,5 +30,8 @@ if settings.BACKEND_CORS_ORIGINS:
 # todo: which in turn is causing test fixture for getting client to fail
 # app.add_middleware(LoggerMiddleware)
 
+
+app.add_event_handler("startup", db_init)
+app.add_event_handler("shutdown", db_close)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
