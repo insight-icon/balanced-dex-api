@@ -1,24 +1,39 @@
+import os
+
 import pytest
 from app.core.file_utils import FileUtils
 from app.models.kline import KLine
+from app.core.test_utils import get_input_output_file_sets
 
 
-output_from_test_data = FileUtils.load_params_from_json('fixtures/test-data-output-kline_1.json')
+PATH = 'fixtures/kline/scenarios/'
+FIXTURES_CONDITIONS = {"scenario_1": True, "scenario_2": False}
+
+FIXTURES = get_input_output_file_sets(PATH, FIXTURES_CONDITIONS)
+# FIXTURES = [
+#     ('kline-scenario_1-input.json', 'kline-scenario_1-output.json', True),
+#     ('kline-scenario_2-input.json', 'kline-scenario_2-output.json', False)
+# ]
 
 
+@pytest.mark.parametrize("input_file, expected_file, to_check", FIXTURES)
 def test_kline(
+        input_file: str,
+        expected_file: str,
+        to_check: bool,
+
         kline: KLine,
-        input_from_test_data: dict,
-        # output_from_test_data: dict
 ) -> None:
-    print("input_from_test_data:", input_from_test_data)
-    # print("output_from_test_data:", output_from_test_data)
+    input_data = FileUtils.load_params_from_json(os.path.join(PATH, input_file))
+    expected_data = FileUtils.load_params_from_json(os.path.join(PATH, expected_file))
 
-    kline.avg = KLine.calculate_new_avg(
-        kline.avg,
-        input_from_test_data["order_id"],
-        input_from_test_data["price"]
-    )
+    if len(input_data) == len(expected_data):
+        for i in range(len(input_data)):
+            print(f"i: {i}, to_check: {to_check}")
 
-    count = input_from_test_data["order_id"]-1
-    assert kline.avg == output_from_test_data[count]["avg"]
+            kline.avg = KLine.calculate_new_avg(
+                kline.avg,
+                input_data[i]["order_id"],
+                input_data[i]["price"]
+            )
+            assert kline.avg == expected_data[i]["avg"]

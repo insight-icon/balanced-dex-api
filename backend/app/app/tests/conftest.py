@@ -70,18 +70,9 @@ def get_database():
     return mongoClient
 
 
-@pytest.fixture(scope="module", params=FileUtils.load_params_from_json('fixtures/test-data-input-kline_1.json'))
-def input_from_test_data(request):
-    a = request.param
-    return request.param
-
-
-@pytest.fixture(scope="module", params=FileUtils.load_params_from_json('fixtures/test-data-output-kline_1.json'))
-def output_from_test_data(request):
-    a = request.param
-    return request.param
-
-
 @pytest.fixture(scope="module")
 def kline() -> KLine:
     return KLine()
+
+
+
