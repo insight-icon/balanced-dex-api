@@ -1,13 +1,10 @@
-import json
-from typing import Dict, Generator
+from typing import Generator
 
 import motor
 import pytest
 from aiokafka import AIOKafkaProducer
-from app.core.config import settings
 from app.models.kline import KLine
-from app.models.orders import OrderCreate
-from app.core.file_utils import FileUtils
+from app.models.orders import EventLog
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -34,13 +31,15 @@ def kafka_producer() -> AIOKafkaProducer:
 
 
 @pytest.fixture(scope="module")
-def order_create() -> OrderCreate:
-    return OrderCreate(
+def order_create() -> EventLog:
+    return EventLog(
+        event="OrderRest",
         order_id=1,
-        market="ICX",
-        price=90,
-        size=17,
-        user="asdasdas",
+        side=1,
+        market="BALICD",
+        price="0.0034",
+        size="1.223",
+        user="hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d",
     )
 
 
