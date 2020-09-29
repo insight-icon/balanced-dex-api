@@ -1,4 +1,6 @@
 from typing import Union
+
+from app.services.kline_service import KLineService
 from loguru import logger
 import asyncio
 
@@ -59,7 +61,9 @@ async def event(
     # update depth
     depth_updates = await TradeService.update_depth(redis_client, _event_or_trade)
     # update kline
-
+    kline_updates = await KLineService.update_kline(redis_client, _event_or_trade)
+    # send event to kafka topic
+    # todo here: send event to topic "user" or "maker"/"taker"
 
 
 

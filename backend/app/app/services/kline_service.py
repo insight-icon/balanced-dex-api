@@ -1,9 +1,16 @@
 import sys
+from typing import Union
 
+from app.models import EventLog, TradeLog
 from app.models.kline import KLine
 
 # todo: calculate kline for trade (agg over 1 minute)
 class KLineService:
+
+    @staticmethod
+    def update_kline(redis_client, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
+        # todo: here start
+        pass
 
     @staticmethod
     def calculate_kline(input_data: list) -> (float, float, float, float, float):
