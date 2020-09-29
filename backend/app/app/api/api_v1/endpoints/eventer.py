@@ -5,7 +5,7 @@ import asyncio
 from typing import Dict
 
 from aiokafka import AIOKafkaProducer
-from app.models.orders import OrderCreate
+from app.models.eventlog import EventLog
 from app.models.rwmodel import RWModel
 from fastapi import APIRouter
 from loguru import logger
@@ -49,13 +49,15 @@ async def index():
     options["/stop"] = "stop producing mock events"  # todo: remove
 
 
-def create_OrderCreate() -> OrderCreate:
-    return OrderCreate(
+def create_eventlog() -> EventLog:
+    return EventLog(
+        event="OrderCreate",
         order_id=1,
-        market="ICX",
-        price=90,
-        size=17,
-        user="asdasdas",
+        side=1,
+        market="BALICD",
+        price="0.0034",
+        size="1.223",
+        user="hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d"
     )
 
 @router.get("/start")
@@ -68,7 +70,7 @@ async def start_eventer():
 @router.get("/run_once")
 async def run_once_eventer():
     global eventer, run
-    o = create_OrderCreate()
+    o = create_eventlog()
     sent = await eventer.send(
         "orders",
         value=json.dumps(o.dict()).encode("utf-8")
@@ -102,7 +104,7 @@ async def background_async(amount: int) -> None:
     run = True
     try:
         while run:
-            o = create_OrderCreate()
+            o = create_eventlog()
             await eventer.send(
                 "orders",
                 value=json.dumps(o.dict()).encode("utf-8")
@@ -114,3 +116,4 @@ async def background_async(amount: int) -> None:
             logger.debug(f"slept {amount}s")
     except:
         await stop_eventer()
+
