@@ -5,3 +5,4 @@ from .kline import KLine
 from .msg import Msg
 from .eventlog import EventLog
 from .tradelog import TradeLog
+from .open_order import OpenOrder
