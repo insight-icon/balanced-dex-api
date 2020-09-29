@@ -3,14 +3,14 @@ import json
 import pytest
 from aiokafka import AIOKafkaProducer
 from app.core.config import settings
-from app.models.orders import OrderCreate
+from app.models import EventLog
 from starlette.testclient import TestClient
 from app.main import app
 
 
 def test_eventer_start(
         client: TestClient,
-        order_create: OrderCreate,
+        order_create: EventLog,
 ) -> None:
     response = client.get(f"{settings.API_V1_STR}/eventer/start")
     assert response.status_code == 200
@@ -19,7 +19,7 @@ def test_eventer_start(
 @pytest.mark.asyncio
 async def test_eventer(
         # client: TestClient,
-        order_create: OrderCreate,
+        order_create: EventLog,
         kafka_producer: AIOKafkaProducer
 ) -> None:
     import asyncio

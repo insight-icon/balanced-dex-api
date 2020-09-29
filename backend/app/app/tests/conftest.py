@@ -3,8 +3,10 @@ from typing import Generator
 import motor
 import pytest
 from aiokafka import AIOKafkaProducer
+
+from app.db.redis import get_redis_database, RedisDataBase
 from app.models.kline import KLine
-from app.models.orders import EventLog
+from app.models import EventLog
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -74,4 +76,12 @@ def kline() -> KLine:
     return KLine()
 
 
+@pytest.fixture(scope="function")
+async def get_redis_client():
+    import asyncio
+    import aioredis
+    from app.core.config import settings
 
+    redis = RedisDataBase()
+    redis.client = await asyncio.wait_for(aioredis.create_redis_pool("redis://localhost:6379"), 3)
+    return redis.client

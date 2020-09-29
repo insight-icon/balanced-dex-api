@@ -86,11 +86,3 @@ class CrudRedisOrders:
     def _create_order_key(_order_id: int) -> str:
         return f"order-{_order_id}"
 
-    # @staticmethod
-    # def _extract_side_from_order_id(_order_id: int) -> int:
-    #     order_key = CrudRedisOrders._create_order_key()
-    #     parts = _order_key.split("-")
-    #     side = "0"
-    #     if len(parts) == 3:
-    #         side = parts[2]
-    #     return int(side)

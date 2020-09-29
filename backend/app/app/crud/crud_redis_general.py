@@ -27,6 +27,8 @@ class CrudRedisGeneral:
         logger.info(f"crud depth in iscan func, pattern is {pattern}")
         keys = await CrudRedisGeneral.iscan(redis_client, pattern)
         result = {}
+        if keys is None:
+            return result
         for key in keys:
             result[key] = await CrudRedisGeneral.get(redis_client, key)
         return result
@@ -34,3 +36,9 @@ class CrudRedisGeneral:
     @staticmethod
     async def exists(redis_client, key):
         return await redis_client.exists(key)
+
+    @staticmethod
+    async def cleanup(redis_client, pattern: str):
+        keys = await CrudRedisGeneral.iscan(redis_client, pattern)
+        for key in keys:
+            await CrudRedisGeneral.delete(redis_client, key)

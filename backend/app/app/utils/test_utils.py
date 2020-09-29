@@ -2,7 +2,8 @@ from os import listdir
 from os.path import isfile, join
 
 
-def get_input_output_file_sets(dir_path: str, fixtures_condition_map: dict):
+# def get_input_output_file_sets(dir_path: str,fixtures_condition_map: dict):
+def get_input_output_file_sets(dir_path: str):
     # assumption the file naming convention is as follows =>
     # <functionality>-<scenario_name>-<input/output>.json
     # eg - kline-scenario_1-input.json
