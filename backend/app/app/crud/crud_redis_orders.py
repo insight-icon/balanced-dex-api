@@ -55,12 +55,22 @@ class CrudRedisOrders:
         return value
 
     @staticmethod
+    async def delete_depth(redis_client, market: str, side: int, price: str):
+        depth_key = CrudRedisOrders._create_depth_key(market, side, price)
+        return await CrudRedisGeneral.delete(redis_client, depth_key)
+
+    @staticmethod
     async def cancel_order_id(redis_client, order_id: int):
         order_id_key = CrudRedisOrders._create_order_key(order_id)
         return await CrudRedisGeneral.delete(redis_client, order_id_key)
 
     @staticmethod
     def _create_depth_key(_market: str, _side: int, _price: str) -> str:
+        if _side == 1 or _side == 2:
+            return f"depth-{_market}-{CrudRedisOrders._is_buy_or_sell(_side)}-{_price}"
+
+    @staticmethod
+    def create_depth_key(_market: str, _side: int, _price: str) -> str:
         if _side == 1 or _side == 2:
             return f"depth-{_market}-{CrudRedisOrders._is_buy_or_sell(_side)}-{_price}"
 
