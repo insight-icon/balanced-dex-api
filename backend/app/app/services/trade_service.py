@@ -2,7 +2,7 @@ import json
 from typing import Union
 
 from app.crud.crud_redis_general import CrudRedisGeneral
-from app.crud.crud_redis_orders import CrudRedisOrders
+from app.crud.crud_redis_depth import CrudRedisDepth
 from loguru import logger
 
 from app.crud.crud_depth import CrudDepth
@@ -55,7 +55,7 @@ class TradeService:
         updates = {}
         for order_id in order_ids:
             event_type = _event_or_trade.event
-            is_order_exist = await CrudRedisOrders.exists_order_id(redis_client, order_id)  # 0 or 1
+            is_order_exist = await CrudRedisDepth.exists_order_id(redis_client, order_id)  # 0 or 1
             if event_type == "OrderRest" and is_order_exist == 0:
                 (key, value) = await TradeService._process_depth_for_new_order_rest(redis_client, order_id, _event_or_trade)
                 updates[key] = value
@@ -87,137 +87,137 @@ class TradeService:
         diff = float(_event_or_trade.size)
         logger.info(f"new_value in new order of OrderRest = {diff}")
         # order
-        is_saved_order = await CrudRedisOrders.set_open_order(redis_client, order_id, _event_or_trade.side,
-                                                              diff)
+        is_saved_order = await CrudRedisDepth.set_open_order(redis_client, order_id, _event_or_trade.side,
+                                                             diff)
         logger.info(f"is_saved_order={is_saved_order}")
         # depth
-        old_depth_value = await CrudRedisOrders.get_depth(redis_client,
-                                                          _event_or_trade.market,
-                                                          _event_or_trade.side,
-                                                          _event_or_trade.price)
+        old_depth_value = await CrudRedisDepth.get_depth(redis_client,
+                                                         _event_or_trade.market,
+                                                         _event_or_trade.side,
+                                                         _event_or_trade.price)
         new_depth_value = old_depth_value + diff
         if new_depth_value == 0:
-            is_deleted = await CrudRedisOrders.delete_depth(redis_client,
-                                                            _event_or_trade.market,
-                                                            _event_or_trade.side,
-                                                            _event_or_trade.price)
+            is_deleted = await CrudRedisDepth.delete_depth(redis_client,
+                                                           _event_or_trade.market,
+                                                           _event_or_trade.side,
+                                                           _event_or_trade.price)
             logger.info(f"new depth = 0, deleted depth = {is_deleted}")
         else:
-            is_saved_depth = await CrudRedisOrders.set_depth(redis_client,
-                                                             _event_or_trade.market,
-                                                             _event_or_trade.side,
-                                                             _event_or_trade.price,
-                                                             new_depth_value)
+            is_saved_depth = await CrudRedisDepth.set_depth(redis_client,
+                                                            _event_or_trade.market,
+                                                            _event_or_trade.side,
+                                                            _event_or_trade.price,
+                                                            new_depth_value)
             logger.info(f"is_saved_depth={is_saved_depth}")
 
-        depth_key = CrudRedisOrders.create_depth_key(_event_or_trade.market, _event_or_trade.side,
-                                                     _event_or_trade.price)
-        return depth_key, new_depth_value
+        depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, _event_or_trade.side,
+                                                    _event_or_trade.price)
+        return depth_key, diff
 
     @staticmethod
     async def _process_depth_for_existing_order_rest(redis_client, order_id: int, _event_or_trade: EventLog):
-        old_order_value = await CrudRedisOrders.get_open_size_for_order_id(redis_client, order_id)
+        old_order_value = await CrudRedisDepth.get_open_size_for_order_id(redis_client, order_id)
         new_order_value = float(_event_or_trade.size)
         diff = new_order_value - old_order_value
-        depth_key = CrudRedisOrders.create_depth_key(_event_or_trade.market, _event_or_trade.side,
-                                                     _event_or_trade.price)
-        old_depth_value = await CrudRedisOrders.get_depth(redis_client,
-                                                          _event_or_trade.market,
-                                                          _event_or_trade.side,
-                                                          _event_or_trade.price)
+        depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, _event_or_trade.side,
+                                                    _event_or_trade.price)
+        old_depth_value = await CrudRedisDepth.get_depth(redis_client,
+                                                         _event_or_trade.market,
+                                                         _event_or_trade.side,
+                                                         _event_or_trade.price)
         logger.info(f"diff in existing order for OrderRest, old value = {old_order_value}, diff = {diff}")
         if diff != 0:
             # order
-            is_saved_order = await CrudRedisOrders.set_open_order(redis_client,
-                                                                  order_id,
-                                                                  _event_or_trade.side,
-                                                                  new_order_value)
+            is_saved_order = await CrudRedisDepth.set_open_order(redis_client,
+                                                                 order_id,
+                                                                 _event_or_trade.side,
+                                                                 new_order_value)
             logger.info(f"is_saved_order={is_saved_order}")
             # depth
             new_depth_value = old_depth_value + diff
             if new_depth_value == 0:
-                is_deleted = await CrudRedisOrders.delete_depth(redis_client,
-                                                                _event_or_trade.market,
-                                                                _event_or_trade.side,
-                                                                _event_or_trade.price)
+                is_deleted = await CrudRedisDepth.delete_depth(redis_client,
+                                                               _event_or_trade.market,
+                                                               _event_or_trade.side,
+                                                               _event_or_trade.price)
                 logger.info(f"new depth = 0, deleted depth = {is_deleted}")
             else:
-                is_saved_depth = await CrudRedisOrders.set_depth(redis_client,
-                                                                 _event_or_trade.market,
-                                                                 _event_or_trade.side,
-                                                                 _event_or_trade.price,
-                                                                 new_depth_value)
+                is_saved_depth = await CrudRedisDepth.set_depth(redis_client,
+                                                                _event_or_trade.market,
+                                                                _event_or_trade.side,
+                                                                _event_or_trade.price,
+                                                                new_depth_value)
                 logger.info(f"is_saved_depth={is_saved_depth}")
             return depth_key, new_depth_value
-        return depth_key, old_depth_value
+        return depth_key, diff
 
     @staticmethod
     async def _process_depth_for_order_cancel(redis_client, order_id: int, _event_or_trade: EventLog):
-        old_order_value = await CrudRedisOrders.get_open_size_for_order_id(redis_client, order_id)
+        old_order_value = await CrudRedisDepth.get_open_size_for_order_id(redis_client, order_id)
         diff = (-1) * old_order_value
         logger.info(f"diff in existing order for OrderCancel = {diff}")
         # order
-        is_deleted = await CrudRedisOrders.cancel_order_id(redis_client, order_id)
+        is_deleted = await CrudRedisDepth.cancel_order_id(redis_client, order_id)
         logger.info(f"is_deleted={is_deleted}")
         # depth
-        old_depth_value = await CrudRedisOrders.get_depth(redis_client,
-                                                          _event_or_trade.market,
-                                                          _event_or_trade.side,
-                                                          _event_or_trade.price)
+        old_depth_value = await CrudRedisDepth.get_depth(redis_client,
+                                                         _event_or_trade.market,
+                                                         _event_or_trade.side,
+                                                         _event_or_trade.price)
         new_depth_value = old_depth_value + diff
         if new_depth_value == 0.0:
-            is_deleted = await CrudRedisOrders.delete_depth(redis_client,
-                                                            _event_or_trade.market,
-                                                            _event_or_trade.side,
-                                                            _event_or_trade.price)
+            is_deleted = await CrudRedisDepth.delete_depth(redis_client,
+                                                           _event_or_trade.market,
+                                                           _event_or_trade.side,
+                                                           _event_or_trade.price)
             logger.info(f"new depth = 0, deleted depth = {is_deleted}")
         else:
-            is_saved_depth = await CrudRedisOrders.set_depth(redis_client,
-                                                             _event_or_trade.market,
-                                                             _event_or_trade.side,
-                                                             _event_or_trade.price,
-                                                             new_depth_value)
+            is_saved_depth = await CrudRedisDepth.set_depth(redis_client,
+                                                            _event_or_trade.market,
+                                                            _event_or_trade.side,
+                                                            _event_or_trade.price,
+                                                            new_depth_value)
             logger.info(f"is_saved_depth={is_saved_depth}")
 
-        depth_key = CrudRedisOrders.create_depth_key(_event_or_trade.market, _event_or_trade.side,
-                                                     _event_or_trade.price)
-        return depth_key, new_depth_value
+        depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, _event_or_trade.side,
+                                                    _event_or_trade.price)
+        return depth_key, diff
 
     @staticmethod
     async def _process_depth_for_trade(redis_client, order_id: int, _event_or_trade: EventLog):
-        old_order_value = await CrudRedisOrders.get_open_size_for_order_id(redis_client, order_id)
+        old_order_value = await CrudRedisDepth.get_open_size_for_order_id(redis_client, order_id)
         diff = (-1) * float(_event_or_trade.size)
         new_order_value = old_order_value + diff
-        side = await CrudRedisOrders.get_open_side_for_order_id(redis_client, order_id)
+        side = await CrudRedisDepth.get_open_side_for_order_id(redis_client, order_id)
         logger.info(f"diff in existing order for Trade = {diff}")
         # order
         if new_order_value == 0:
-            deleted = await CrudRedisOrders.cancel_order_id(redis_client, order_id)
+            deleted = await CrudRedisDepth.cancel_order_id(redis_client, order_id)
             logger.info(f"new_order_value = 0, deleting order_id - {order_id}, deleted - {deleted}")
         else:
-            is_saved_order = await CrudRedisOrders.set_open_order(redis_client,
-                                                                  order_id,
-                                                                  _event_or_trade.side,
-                                                                  new_order_value)
+            is_saved_order = await CrudRedisDepth.set_open_order(redis_client,
+                                                                 order_id,
+                                                                 side,
+                                                                 new_order_value)
             logger.info(f"is_saved_order={is_saved_order}")
         # depth
-        old_depth_value = await CrudRedisOrders.get_depth(redis_client,
-                                                          _event_or_trade.market,
-                                                          side,
-                                                          _event_or_trade.price)
+        old_depth_value = await CrudRedisDepth.get_depth(redis_client,
+                                                         _event_or_trade.market,
+                                                         side,
+                                                         _event_or_trade.price)
         new_depth_value = old_depth_value + diff
         if new_depth_value == 0:
-            is_deleted = await CrudRedisOrders.delete_depth(redis_client, _event_or_trade.market, side,
-                                                            _event_or_trade.price)
+            is_deleted = await CrudRedisDepth.delete_depth(redis_client, _event_or_trade.market, side,
+                                                           _event_or_trade.price)
             logger.info(f"new depth = 0, deleted depth = {is_deleted}")
         else:
-            is_saved_depth = await CrudRedisOrders.set_depth(redis_client,
-                                                             _event_or_trade.market,
-                                                             side,
-                                                             _event_or_trade.price,
-                                                             new_depth_value)
+            is_saved_depth = await CrudRedisDepth.set_depth(redis_client,
+                                                            _event_or_trade.market,
+                                                            side,
+                                                            _event_or_trade.price,
+                                                            new_depth_value)
             logger.info(f"is_saved_depth={is_saved_depth}")
 
-        depth_key = CrudRedisOrders.create_depth_key(_event_or_trade.market, side,
-                                                     _event_or_trade.price)
-        return depth_key, new_depth_value
+        depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, side,
+                                                    _event_or_trade.price)
+        return depth_key, diff

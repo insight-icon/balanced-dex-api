@@ -1,45 +1,101 @@
+import json
 import sys
+import time
 from typing import Union
+
+from app.crud.crud_redis_general import CrudRedisGeneral
+from app.crud.crud_redis_kline import CrudRedisKLine
+from loguru import logger
 
 from app.models import EventLog, TradeLog
 from app.models.kline import KLine
+
 
 # todo: calculate kline for trade (agg over 1 minute)
 class KLineService:
 
     @staticmethod
-    def update_kline(redis_client, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
-        # todo: here start
-        pass
+    async def init_kline(redis_client, interval_seconds: int):
+        kline_key_latest = CrudRedisKLine.create_kline_key(interval_seconds, "latest")
+        await CrudRedisGeneral.set(redis_client, kline_key_latest, "")
 
     @staticmethod
-    def calculate_kline(input_data: list) -> (float, float, float, float, float):
-        _open: float = 0.0
-        _high: float = 0.0
-        _low: float = sys.float_info.max
-        _close: float = 0.0
-        _avg: float = 0.0
+    async def update_kline(redis_client, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
+        if type(_event_or_trade) == TradeLog:
+            logger.info("!! === update kline === !!")
+            await KLineService._update_kline_for_trade(redis_client, _event_or_trade)
 
-        if len(input_data) == 0:
-            return KLine()  # every value is 0.0
-
-        # todo: remove assumption - list is sorted in ascending order on time
-        _open = input_data[0]
-        _close = input_data[len(input_data) - 1]
-
-        for i in range(len(input_data)):
-            value = input_data[i]
-
-            if value < _low:
-                _low = value
-
-            if value > _high:
-                _high = value
-
-            _avg = KLineService.__calculate_new_avg(_old_avg=_avg, _count=i + 1, _new_value=value)
-
-        return KLine(open=_open, high=_high, low=_low, close=_close, avg=_avg)
+        return {}
 
     @staticmethod
-    def __calculate_new_avg(_old_avg: float, _count: int, _new_value: float):
-        return ((_old_avg * (_count - 1)) + _new_value) / _count
+    async def _update_kline_for_trade(redis_client, _trade: TradeLog):
+        results = await CrudRedisGeneral.get_key_value_pairs(redis_client, "kline*latest")
+        for key, value in results.items():
+            # current_time_micro_secs = (time.time()) * (10**6)
+            # logger.info(f"current time is - {current_time_micro_secs}")
+            kline_latest_key = key.decode("utf-8")
+            kline_latest_key_interval_seconds = CrudRedisKLine.get_interval_from_kline_latest_key(kline_latest_key)
+            kline_latest_value = value.decode("utf-8")
+            logger.info(f"result is {kline_latest_key}, {kline_latest_value} and interval is {kline_latest_key_interval_seconds}")
+
+            if kline_latest_value == "":
+                logger.info(f"kline_latest_value == ")
+                kline = await KLineService._create_new_kline(kline_latest_key_interval_seconds, _trade)
+                await CrudRedisKLine.set_kline(redis_client, key, kline.dict())
+            else:
+                logger.info(f"else of kline_latest_value == ")
+                kline = json.loads(kline_latest_value)
+                kline_start_timestamp = kline["start_timestamp"]
+                trade_timestamp = _trade.timestamp
+
+                logger.info(f"{(trade_timestamp - kline_start_timestamp)} <= {kline_latest_key_interval_seconds * (10 ** 6)} : "
+                            f"{(trade_timestamp - kline_start_timestamp) <= kline_latest_key_interval_seconds * (10 ** 6)}")
+
+                if (trade_timestamp - kline_start_timestamp) <= kline_latest_key_interval_seconds * (10 ** 6):
+                    # continue kline
+                    logger.info("# continue kline")
+                    await KLineService._update_kline(kline, _trade)
+                    await CrudRedisKLine.set_kline(redis_client, key, kline)
+                else:
+                    logger.info("# store existing kline and create new kline")
+                    kline_key = CrudRedisKLine.create_kline_key(kline_latest_key_interval_seconds, int(kline_start_timestamp))
+                    logger.info(f"kline_start_timestamp: {kline_start_timestamp}, kline_key: {kline_key}, and kline: {kline}")
+                    await CrudRedisKLine.set_kline(redis_client, kline_key, kline)
+
+                    new_kline = await KLineService._create_new_kline(kline_latest_key_interval_seconds, _trade)
+                    await CrudRedisKLine.set_kline(redis_client, key, new_kline.dict())
+
+    @staticmethod
+    async def _create_new_kline(interval_seconds: float, trade: TradeLog) -> KLine:
+        return KLine(
+            open=trade.price,
+            high=trade.price,
+            low=trade.price,
+            close=trade.price,
+            volume=trade.size,
+            interval_seconds=interval_seconds,
+            start_timestamp=trade.timestamp,
+            end_timestamp=trade.timestamp
+        )
+
+    @staticmethod
+    async def _update_kline(kline: dict, trade: TradeLog):
+        # open
+        # high
+        price = float(trade.price)
+        size = float(trade.size)
+        if price > kline["high"]:
+            kline["high"] = price
+        # low
+        if price < kline["low"]:
+            kline["low"] = price
+        # close
+        kline["close"] = price
+        # vol
+        kline["volume"] = kline["volume"] + size
+        # interval
+        # start_timestamp
+        # end_timestamp
+        kline["end_timestamp"] = trade.timestamp
+
+

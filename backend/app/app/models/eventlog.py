@@ -17,6 +17,8 @@ class EventLog(RWModel):
     order_id: int
     side: int
     market: str
-    price: str  # todo: confirm datatype is str
-    size: str  # todo: confirm datatype is str
+    price: str
+    size: str
     user: str
+
+    timestamp: float

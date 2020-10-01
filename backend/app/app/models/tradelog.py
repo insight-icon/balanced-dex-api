@@ -24,3 +24,5 @@ class TradeLog(RWModel):
     taker: str
     taker_order: int
     user: str
+
+    timestamp: float

@@ -1,5 +1,7 @@
 from typing import Union
 
+from app.crud.crud_redis_general import CrudRedisGeneral
+from app.models import TradeLog
 from app.services.kline_service import KLineService
 from loguru import logger
 import asyncio
@@ -21,8 +23,13 @@ router = APIRouter()
 event_producer: AIOKafkaProducer = None
 
 
-def init():
+async def init():
     global event_producer
+    redis_client = await get_redis_database()
+    await KLineService.init_kline(redis_client, 60)
+    await KLineService.init_kline(redis_client, 3600)
+    await KLineService.init_kline(redis_client, 86400)
+
     event_producer = get_kafka_producer()
 
 
@@ -65,22 +72,10 @@ async def event(
     # send event to kafka topic
     # todo here: send event to topic "user" or "maker"/"taker"
 
-
-
     return depth_updates
 
 
-# @router.post("/event/keys/pattern")
-# async def event(
-#         _pattern: models.Msg,
-#         redis_client: Redis = Depends(get_redis_database)
-# ):
-#     await TradeService.use_db(redis_client, 0)
-#     keys = await TradeService.get_keys(redis_client, _pattern.msg)
-#     return keys
-
-
-@router.post("/depth/pattern")
+@router.post("/search")
 async def event(
         _pattern: models.Msg,
         redis_client: Redis = Depends(get_redis_database)
@@ -90,10 +85,9 @@ async def event(
     return key_value_pairs
 
 
-@router.get("/events")
+@router.get("/events/cleanup")
 async def events(
         redis_client: Redis = Depends(get_redis_database)
 ):
-    await TradeService.use_db(redis_client, 1)
-    key_value_pairs = await TradeService.get_key_value_pairs(redis_client, "*")
-    return key_value_pairs
+    await TradeService.use_db(redis_client, 0)
+    await CrudRedisGeneral.cleanup(redis_client, "*")
