@@ -75,7 +75,7 @@ async def event(
     depth_updates = await TradeService.update_depth(redis_client, kafka_producer, _event_or_trade)
     logger.info(f"balanced::: depth_updates: {depth_updates}")
     # update kline
-    kline_updates = await KLineService.update_kline(redis_client, _event_or_trade)
+    kline_updates = await KLineService.update_kline(redis_client, kafka_producer, _event_or_trade)
     logger.info(f"balanced::: kline_updates: {kline_updates}")
     # send event to kafka topic
     publish_to_users = await WsService.publish_to_topic(kafka_producer, _event_or_trade)

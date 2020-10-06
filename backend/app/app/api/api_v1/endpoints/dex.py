@@ -1,4 +1,5 @@
-from aioredis import Channel, create_connection
+from aioredis import Channel, create_connection, Redis
+from app.models import ConnectionManager
 from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -12,6 +13,7 @@ import typing
 from pydantic import BaseModel
 from typing import Optional
 import motor.motor_asyncio
+from motor.motor_asyncio import AsyncIOMotorClient
 import redis
 import aioredis
 # from starlette.websockets import WebSocketDisconnect
@@ -26,15 +28,15 @@ from app.core.config import settings
 router = APIRouter()
 
 # #################### create clients ####################
-manager = None
-mongoClient = None
-redisClient = None
+manager: ConnectionManager = None
+mongoClient: AsyncIOMotorClient = None
+redisClient: Redis = None
 
 
 # @router.on_event("startup")
 async def startup():
     global manager, mongoClient, redisClient
-    manager = models.ConnectionManager()
+    manager = ConnectionManager()
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_HOST, settings.MONGODB_PORT)
     # redisClient = await aioredis.create_redis_pool(settings.REDIS_CONNECTION)
 
@@ -151,11 +153,15 @@ async def publish(websocket: WebSocket, clientid: str, topicname: str):
 
 
 # consumer
-async def consume(consumer, topicname):
+async def consume(consumer, topicname) -> tuple:
     async for msg in consumer:
         print("for msg in consumer: ", msg)
-        return msg.value.decode()
-
+        if msg.key is not None:
+            print(f"msg.value is not None, mag.value={msg.value}")
+            return msg.key.decode(), msg.value.decode()
+        else:
+            print("for msg in consumer: sending blank key")
+            return None, msg.value.decode()
 
 @router.websocket_route("/consumer/{clientid}/{topicname}")
 class WebsocketConsumer(WebSocketEndpoint):
@@ -165,6 +171,7 @@ class WebsocketConsumer(WebSocketEndpoint):
     And this path operation will:
     * return ConsumerResponse
     """
+
 
     async def on_connect(self, websocket: WebSocket) -> None:
         logger.debug("Inside on_connect for topic consumption")
@@ -222,10 +229,14 @@ class WebsocketConsumer(WebSocketEndpoint):
     async def send_consumer_message(self, websocket: WebSocket, topicname: str) -> None:
         self.counter = 0
         while True:
-            data = await consume(self.consumer, topicname)
+            key, value = await consume(self.consumer, topicname)
             # response = ConsumerResponse(topic=topicname, **json.loads(data))
-            logger.info(f"data : {data}")
-            await manager.send_personal_message(f"{data}", websocket)
+            if key is None:
+                logger.info(f"consumer received data :: msg is: {value}")
+                await manager.send_personal_message(f"{value}", websocket)
+            else:
+                logger.info(f"consumer received data :: {key}:{value}")
+                await manager.send_personal_message(f"{key}:{value}", websocket)
             print("websocket.send_text done")
             self.counter = self.counter + 1
 

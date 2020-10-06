@@ -1,6 +1,8 @@
 import json
 from typing import Union
 
+from aiokafka import AIOKafkaProducer
+from app.crud.crud_kafka import CrudKafka
 from app.crud.crud_redis_general import CrudRedisGeneral
 from app.crud.crud_redis_depth import CrudRedisDepth
 from loguru import logger
@@ -49,27 +51,29 @@ class TradeService:
     #     return key
 
     @staticmethod
-    async def update_depth(redis_client, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
+    async def update_depth(redis_client, kafka_producer: AIOKafkaProducer, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
         logger.info("!!!!!!!     update_depth update_depth update_depth     !!!!!!!!!")
         order_ids = await TradeService._get_order_ids(_event_or_trade)
-        updates = {}
+        results = {}
         for order_id in order_ids:
             event_type = _event_or_trade.event
             is_order_exist = await CrudRedisDepth.exists_order_id(redis_client, order_id)  # 0 or 1
             if event_type == "OrderRest" and is_order_exist == 0:
                 (key, value) = await TradeService._process_depth_for_new_order_rest(redis_client, order_id, _event_or_trade)
-                updates[key] = value
+                results[key] = value
             elif event_type == "OrderRest" and is_order_exist == 1:
                 (key, value) = await TradeService._process_depth_for_existing_order_rest(redis_client, order_id, _event_or_trade)
                 logger.info(f"event_type == OrderRest and is_order_exist == 1, key={key}, value={value}")
-                updates[key] = value
+                results[key] = value
             elif event_type == "OrderCancel" and is_order_exist == 1:
                 (key, value) = await TradeService._process_depth_for_order_cancel(redis_client, order_id, _event_or_trade)
-                updates[key] = value
+                results[key] = value
             elif event_type == "Trade" and is_order_exist == 1:
                 (key, value) = await TradeService._process_depth_for_trade(redis_client, order_id, _event_or_trade)
-                updates[key] = value
-        return updates
+                results[key] = value
+
+        await TradeService._publish_depth_to_kafka(kafka_producer, results)
+        return results
 
     @staticmethod
     async def _get_order_ids(_event_or_trade: Union[EventLog, TradeLog]) -> list:
@@ -221,3 +225,13 @@ class TradeService:
         depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, side,
                                                     _event_or_trade.price)
         return depth_key, diff
+
+    @staticmethod
+    async def _publish_depth_to_kafka(kafka_producer: AIOKafkaProducer, results: dict):
+        logger.info("publish to topic depth")
+        for key, value in results.items():
+            value_bytes = str(value).encode("utf-8")
+            key_bytes = str(key).encode("utf-8")
+            logger.info(f"TradeService._publish_depth_to_kafka - key: {key_bytes}, value: {value_bytes}")
+            await CrudKafka.publish_key_value_to_topics(kafka_producer, ["depth"], value_bytes, key_bytes)
+

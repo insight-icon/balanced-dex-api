@@ -11,6 +11,7 @@ class EventLog(RWModel):
         "price":"0.0034",
         "size":"1.223",
         "user":"hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d"
+        "timestamp":1601940087030000000
     }
     """
     event: str
