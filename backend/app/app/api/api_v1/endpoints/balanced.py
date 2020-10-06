@@ -3,6 +3,7 @@ from typing import Union
 from app.crud.crud_redis_general import CrudRedisGeneral
 from app.models import TradeLog
 from app.services.kline_service import KLineService
+from app.services.ws_service import WsService
 from loguru import logger
 import asyncio
 
@@ -20,17 +21,21 @@ from app.services.trade_service import TradeService
 from fastapi import APIRouter, Depends
 
 router = APIRouter()
-event_producer: AIOKafkaProducer = None
+kafka_producer: AIOKafkaProducer = None
 
 
 async def init():
-    global event_producer
+    global kafka_producer
     redis_client = await get_redis_database()
     await KLineService.init_kline(redis_client, 60)
     await KLineService.init_kline(redis_client, 3600)
     await KLineService.init_kline(redis_client, 86400)
 
-    event_producer = get_kafka_producer()
+    kafka_producer = get_kafka_producer()
+
+
+async def shut():
+    await kafka_producer.stop()
 
 
 def get_kafka_producer() -> AIOKafkaProducer:
@@ -45,6 +50,7 @@ def get_kafka_producer() -> AIOKafkaProducer:
 
 
 router.add_event_handler("startup", init)
+router.add_event_handler("shutdown", shut)
 
 
 @router.post("/event")
@@ -66,11 +72,14 @@ async def event(
     # redis_client to db = 0
     await TradeService.use_db(redis_client, 0)
     # update depth
-    depth_updates = await TradeService.update_depth(redis_client, _event_or_trade)
+    depth_updates = await TradeService.update_depth(redis_client, kafka_producer, _event_or_trade)
+    logger.info(f"balanced::: depth_updates: {depth_updates}")
     # update kline
     kline_updates = await KLineService.update_kline(redis_client, _event_or_trade)
+    logger.info(f"balanced::: kline_updates: {kline_updates}")
     # send event to kafka topic
-    # todo here: send event to topic "user" or "maker"/"taker"
+    publish_to_users = await WsService.publish_to_topic(kafka_producer, _event_or_trade)
+    logger.info(f"balanced::: publish to users: {publish_to_users}")
 
     return depth_updates
 
