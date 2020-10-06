@@ -2,6 +2,7 @@ from typing import Union
 
 from app.crud.crud_kafka import CrudKafka
 from app.crud.crud_redis_general import CrudRedisGeneral
+from app.db.kafka import create_kafka_producer, close_kafka_producer
 from app.models import TradeLog
 from app.services.kline_service import KLineService
 from app.services.ws_service import WsService
@@ -22,7 +23,7 @@ from app.services.trade_service import TradeService
 from fastapi import APIRouter, Depends
 
 router = APIRouter()
-kafka_producer: AIOKafkaProducer = None
+kafka_producer: AIOKafkaProducer
 
 
 async def init():
@@ -36,21 +37,15 @@ async def init():
 
 
 async def shut():
-    await kafka_producer.stop()
+    global kafka_producer
+    await close_kafka_producer(kafka_producer)
 
 
 def get_kafka_producer() -> AIOKafkaProducer:
     loop = asyncio.get_event_loop()
     client_id = "balanced_kafka_producer"
     bootstrap_server = settings.KAFKA_INTERNAL_HOST_PORT
-    producer = CrudKafka.create_kafka_producer(loop, client_id, bootstrap_server)
-    # loop = asyncio.get_event_loop()
-    # producer = AIOKafkaProducer(
-    #     loop=loop,
-    #     client_id="event-producer",
-    #     bootstrap_servers=settings.KAFKA_INTERNAL_HOST_PORT,
-    #     api_version="2.0.1"
-    # )
+    producer = create_kafka_producer(loop=loop, client_id=client_id, bootstrap_server=bootstrap_server)
     return producer
 
 
