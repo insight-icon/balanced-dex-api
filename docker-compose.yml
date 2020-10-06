@@ -1,6 +1,7 @@
 version: "3.3"
 services:
 
+### kafka related
   zookeeper:
     image: confluentinc/cp-zookeeper:5.5.1
     ports:
@@ -28,8 +29,6 @@ services:
     networks:
       - default
 
-
-# #
   schema-registry:
     image: confluentinc/cp-schema-registry:5.5.1
     hostname: schema-registry
@@ -68,8 +67,9 @@ services:
       PORT: 9021
     networks:
       - default
-# #
+# end of kafka
 
+# backend related
   mongodb:
     image: mongo:latest
     ports:
@@ -179,6 +179,8 @@ services:
         - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
     networks:
       - default
+# end of backend
+
 
 #  filebeat:
 #    image: 'filebeat:${TAG-latest}'
