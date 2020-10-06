@@ -1,11 +1,25 @@
+from asyncio import AbstractEventLoop
 from typing import Union
 
+import asyncio
 from aiokafka import AIOKafkaProducer
+from app.core.config import settings
 from kafka.errors import KafkaConnectionError
 from loguru import logger
 
 
 class CrudKafka:
+
+    @staticmethod
+    def create_kafka_producer(loop:  AbstractEventLoop, client_id: str, bootstrap_server: str) -> AIOKafkaProducer:
+        # loop = asyncio.get_event_loop()
+        producer = AIOKafkaProducer(
+            loop=loop,
+            client_id=client_id,  # "event-producer",
+            bootstrap_servers=bootstrap_server,  # settings.KAFKA_INTERNAL_HOST_PORT,
+            api_version="2.0.1"
+        )
+        return producer
 
     @staticmethod
     async def publish_message_to_topics(kafka_producer: AIOKafkaProducer, topics: list, msg: bytes):
