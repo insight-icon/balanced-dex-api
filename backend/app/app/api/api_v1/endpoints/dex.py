@@ -146,7 +146,7 @@ async def publish(websocket: WebSocket, clientid: str, topicname: str):
     except WebSocketDisconnect:
         logger.error(WebSocketDisconnect)
     except KafkaConnectionError:
-        logger.error(WebSocketDisconnect)
+        logger.error(KafkaConnectionError)
     finally:
         await aioproducer.stop()
         await websocket.close()
