@@ -1,15 +1,17 @@
 from typing import Union
 
+import typing
 from app.crud.crud_kafka import CrudKafka
 from app.crud.crud_redis_general import CrudRedisGeneral
-from app.db.kafka import create_kafka_producer, close_kafka_producer
+from app.crud.crud_ws import CrudWS
+from app.db.kafka import create_kafka_producer, close_kafka_producer, create_kafka_consumer
 from app.models import TradeLog
 from app.services.kline_service import KLineService
 from app.services.ws_service import WsService
 from loguru import logger
 import asyncio
 
-from aiokafka import AIOKafkaProducer
+from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from aioredis import Redis
 from app.core.config import settings
 from app.db.redis import get_redis_database
@@ -20,7 +22,9 @@ from app.db.redis import get_redis_database
 from app import models
 
 from app.services.trade_service import TradeService
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, WebSocket, Depends
+from starlette.endpoints import WebSocketEndpoint
+from starlette.types import Scope, Receive, Send
 
 router = APIRouter()
 kafka_producer: AIOKafkaProducer
@@ -28,11 +32,6 @@ kafka_producer: AIOKafkaProducer
 
 async def init():
     global kafka_producer
-    redis_client = await get_redis_database()
-    await KLineService.init_kline(redis_client, 60)
-    await KLineService.init_kline(redis_client, 3600)
-    await KLineService.init_kline(redis_client, 86400)
-
     kafka_producer = get_kafka_producer()
 
 
@@ -69,19 +68,23 @@ async def event(
     # 2. update "kline", then send new kline(add 1min) to kafka topic
     # 3. forward event/trade to either 1 or both users
 
+    results = {}
     # redis_client to db = 0
     await TradeService.use_db(redis_client, 0)
     # update depth
     depth_updates = await TradeService.update_depth(redis_client, kafka_producer, _event_or_trade)
-    logger.info(f"balanced::: depth_updates: {depth_updates}")
+    # logger.info(f"balanced::: depth_updates: {depth_updates}")
+    results["depth"] = depth_updates
     # update kline
     kline_updates = await KLineService.update_kline(redis_client, kafka_producer, _event_or_trade)
-    logger.info(f"balanced::: kline_updates: {kline_updates}")
+    # logger.info(f"balanced::: kline_updates: {kline_updates}")
+    results["kline"] = kline_updates
     # send event to kafka topic
     publish_to_users = await WsService.publish_to_topic(kafka_producer, _event_or_trade)
-    logger.info(f"balanced::: publish to users: {publish_to_users}")
+    # logger.info(f"balanced::: publish to users: {publish_to_users}")
+    results["publish_to_users"] = publish_to_users
 
-    return depth_updates
+    return results
 
 
 @router.post("/search")

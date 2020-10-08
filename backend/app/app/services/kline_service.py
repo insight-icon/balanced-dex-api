@@ -110,7 +110,8 @@ class KLineService:
     async def _publish_kline_to_kafka(kafka_producer: AIOKafkaProducer, results: dict):
         logger.info("publish to topic kline")
         for key, value in results.items():
+            logger.info(f"_publish_kline_to_kafka - key :::: {key}")
             value_bytes = str(value).encode("utf-8")
             key_bytes = str(key).encode("utf-8")
             logger.info(f"TradeService._publish_kline_to_kafka - key: {key_bytes}, value: {value_bytes}")
-            await CrudKafka.publish_key_value_to_topics(kafka_producer, ["kline"], value_bytes, key_bytes)
+            await CrudKafka.publish_key_value_to_topics(kafka_producer, [key], value_bytes, key_bytes)

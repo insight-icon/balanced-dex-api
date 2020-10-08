@@ -15,10 +15,13 @@ class WsService:
         logger.info("!!! WS service !!!")
         topics = []
         if type(_event_or_trade) == EventLog:
-            topics.append(_event_or_trade.user)
+            topic = f"address-{_event_or_trade.user}".lower()
+            topics.append(topic)
         elif type(_event_or_trade) == TradeLog:
-            topics.append(_event_or_trade.maker)
-            topics.append(_event_or_trade.taker)
+            topic_maker = f"address-{_event_or_trade.maker}".lower()
+            topics.append(topic_maker)
+            topic_taker = f"address-{_event_or_trade.taker}".lower()
+            topics.append(topic_taker)
 
         msg = json.dumps(_event_or_trade.dict()).encode("ascii")
         key = str(_event_or_trade.timestamp).encode("utf-8")

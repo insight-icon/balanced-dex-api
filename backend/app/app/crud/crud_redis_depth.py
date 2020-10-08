@@ -67,12 +67,12 @@ class CrudRedisDepth:
     @staticmethod
     def _create_depth_key(_market: str, _side: int, _price: str) -> str:
         if _side == 1 or _side == 2:
-            return f"depth-{_market}-{CrudRedisDepth._is_buy_or_sell(_side)}-{_price}"
+            return f"depth-{_market}-{CrudRedisDepth._is_buy_or_sell(_side)}-{_price}".lower()
 
     @staticmethod
     def create_depth_key(_market: str, _side: int, _price: str) -> str:
         if _side == 1 or _side == 2:
-            return f"depth-{_market}-{CrudRedisDepth._is_buy_or_sell(_side)}-{_price}"
+            return f"depth-{_market}-{CrudRedisDepth._is_buy_or_sell(_side)}-{_price}".lower()
 
     @staticmethod
     def _is_buy_or_sell(_side: int) -> str:
@@ -84,5 +84,5 @@ class CrudRedisDepth:
 
     @staticmethod
     def _create_order_key(_order_id: int) -> str:
-        return f"order-{_order_id}"
+        return f"order-{_order_id}".lower()
 

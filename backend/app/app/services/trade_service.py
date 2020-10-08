@@ -116,7 +116,7 @@ class TradeService:
 
         depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, _event_or_trade.side,
                                                     _event_or_trade.price)
-        return depth_key, diff
+        return depth_key, new_depth_value
 
     @staticmethod
     async def _process_depth_for_existing_order_rest(redis_client, order_id: int, _event_or_trade: EventLog):
@@ -153,7 +153,7 @@ class TradeService:
                                                                 new_depth_value)
                 logger.info(f"is_saved_depth={is_saved_depth}")
             return depth_key, new_depth_value
-        return depth_key, diff
+        return depth_key, new_order_value
 
     @staticmethod
     async def _process_depth_for_order_cancel(redis_client, order_id: int, _event_or_trade: EventLog):
@@ -185,7 +185,7 @@ class TradeService:
 
         depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, _event_or_trade.side,
                                                     _event_or_trade.price)
-        return depth_key, diff
+        return depth_key, new_depth_value
 
     @staticmethod
     async def _process_depth_for_trade(redis_client, order_id: int, _event_or_trade: EventLog):
@@ -224,7 +224,7 @@ class TradeService:
 
         depth_key = CrudRedisDepth.create_depth_key(_event_or_trade.market, side,
                                                     _event_or_trade.price)
-        return depth_key, diff
+        return depth_key, new_depth_value
 
     @staticmethod
     async def _publish_depth_to_kafka(kafka_producer: AIOKafkaProducer, results: dict):
@@ -232,6 +232,15 @@ class TradeService:
         for key, value in results.items():
             value_bytes = str(value).encode("utf-8")
             key_bytes = str(key).encode("utf-8")
+            topics = TradeService._get_kafka_topics_from_depth_key(key)
+            logger.info(f"TradeService._publish_depth_to_kafka - topics: {topics}")
             logger.info(f"TradeService._publish_depth_to_kafka - key: {key_bytes}, value: {value_bytes}")
-            await CrudKafka.publish_key_value_to_topics(kafka_producer, ["depth"], value_bytes, key_bytes)
+            await CrudKafka.publish_key_value_to_topics(kafka_producer, topics, value_bytes, key_bytes)
 
+    @staticmethod
+    def _get_kafka_topics_from_depth_key(depth_key: str):
+        topics = ["depth-all"]
+        market = depth_key.split("-")[1]
+        topic = f"depth-{market}".lower()
+        topics.append(topic)
+        return topics

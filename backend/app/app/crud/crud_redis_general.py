@@ -37,7 +37,7 @@ class CrudRedisGeneral:
     async def exists(redis_client, key):
         return await redis_client.exists(key)
 
-    @staticmethod
+    @staticmethod  # todo: remove for prod
     async def cleanup(redis_client, pattern: str):
         keys = await CrudRedisGeneral.iscan(redis_client, pattern)
         for key in keys:

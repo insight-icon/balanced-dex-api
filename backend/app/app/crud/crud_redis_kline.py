@@ -32,9 +32,9 @@ class CrudRedisKLine:
     @staticmethod
     def create_kline_key(interval_seconds: int, start_time: Union[int, str]) -> str:
         if type(start_time) == int:
-            return f"kline-{interval_seconds}sec-{start_time}"
+            return f"kline-{interval_seconds}-{start_time}"
         else:
-            return f"kline-{interval_seconds}sec-latest"
+            return f"kline-{interval_seconds}-latest"
 
     @staticmethod
     def get_interval_from_kline_latest_key(kline_latest_key: str) -> int:
