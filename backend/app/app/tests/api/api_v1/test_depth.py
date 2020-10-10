@@ -24,25 +24,35 @@ async def test_depth(
     input_data = FileUtils.load_params_from_json(os.path.join(PATH, input_file))
     expected_data = FileUtils.load_params_from_json(os.path.join(PATH, expected_file))
 
-    logger.info(f"get_redis_client: {get_redis_client}")
-    result = await CrudRedisGeneral.get_key_value_pairs(get_redis_client, "*")
-    logger.info(f"result: {result}")
     await CrudRedisGeneral.cleanup(get_redis_client, "*")
-    result = await CrudRedisGeneral.get_key_value_pairs(get_redis_client,"*")
-    logger.info(f"result, before start of test, redis: {result}")
 
     if len(input_data) == len(expected_data):
         for i in range(len(input_data)):
-            logger.info(f"i::::{i}")
-            data = input_data[i]
-            body = json.dumps(data)
-            conn = client.HTTPConnection("localhost", 80)
-            conn.request("POST", "/api/v1/balanced/event", body=body)
-            response = conn.getresponse()
-            resp_body = response.read().decode(encoding="utf-8")
-            logger.info(f"resp_body : {str(resp_body)}")
-            assert response.status == 200
-            assert resp_body.replace(" ", "") == json.dumps(expected_data[i]).replace(" ", "")
+            logger.info(f"input line = {i}")
+            depth = get_results(input_data, i)
+            logger.info(f"depth : {depth}")
+            for key, value in depth.items():
+                logger.info(f"key, value - {key} and {value}")
+                # below: get value for result key in expected results
+                expected_result = expected_data[i][key]
+                logger.info(f"expected_result : {expected_result}")
 
+                assert value == expected_result
+
+    await CrudRedisGeneral.cleanup(get_redis_client, "*")
     get_redis_client.close()
     await get_redis_client.wait_closed()
+
+
+def get_results(input_data, i):
+    data = input_data[i]
+    body = json.dumps(data)
+    conn = client.HTTPConnection("localhost", 80)
+    conn.request("POST", "/api/v1/balanced/event", body=body)
+    response = conn.getresponse()
+    resp_body = str(response.read().decode(encoding="utf-8"))
+    resp_dict = json.loads(resp_body)
+    logger.info(f"resp_dict : {resp_dict}")
+    assert response.status == 200
+    depth = resp_dict["depth"]
+    return depth

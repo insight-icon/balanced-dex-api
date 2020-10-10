@@ -1,13 +1,7 @@
 [
   {},
-  {
-    "depth-BALICD-sell-0.003": 1.223
-  },
+  {"depth-balicd-sell-0.003": 1.223},
   {},
-  {
-    "depth-BALICD-sell-0.003": 0.0
-  },
-  {
-    "depth-BALICD-buy-0.003": 0.777
-  }
+  {"depth-balicd-sell-0.003": 0},
+  {"depth-balicd-buy-0.003": 0.777}
 ]
