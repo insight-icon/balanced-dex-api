@@ -18,7 +18,10 @@ class KLineService:
     @staticmethod
     async def init_kline(redis_client, interval_seconds: int):
         kline_key_latest = CrudRedisKLine.create_kline_key(interval_seconds, "latest")
-        await CrudRedisGeneral.set(redis_client, kline_key_latest, "")
+        is_exist = await CrudRedisGeneral.exists(redis_client, kline_key_latest)
+        logger.info(f"init_kline - is_exist = {is_exist}")
+        if is_exist != 1:
+            await CrudRedisGeneral.set(redis_client, kline_key_latest, "")
 
     @staticmethod
     async def update_kline(redis_client, kafka_producer, _event_or_trade: Union[EventLog, TradeLog]) -> dict:

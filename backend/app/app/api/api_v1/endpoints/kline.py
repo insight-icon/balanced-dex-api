@@ -1,7 +1,8 @@
 import asyncio
+import collections
 
 import typing
-from fastapi import WebSocket
+from fastapi import WebSocket, Depends
 from aioredis import Redis
 from app.core.config import settings
 from app.crud.crud_redis_general import CrudRedisGeneral
@@ -84,3 +85,32 @@ class WebsocketConsumer(WebSocketEndpoint):
             else:
                 print("for msg in consumer: sending blank key")
                 return None, msg.value.decode()
+
+
+@router.get("/{interval}/count/{count}")
+async def kline_interval(
+        interval: int,
+        count: int,
+        redis_client: Redis = Depends(get_redis_database)
+):
+    pattern = f"kline-{interval}-*"
+
+    kline_keys = []
+    async for key in redis_client.iscan(match=pattern):
+        kline_keys.append(key)
+
+    kline_keys.sort(reverse=True)
+
+    # results = []
+    # for key in kline_keys:
+    #     value = await CrudRedisGeneral.get(redis_client, key)
+    #     results.append({key:value})
+    results = collections.OrderedDict()
+    for i in range(len(kline_keys)):
+        if i >= count:
+            break
+        key = kline_keys[i]
+        value = await CrudRedisGeneral.get(redis_client, key)
+        results[key] = value
+
+    return results

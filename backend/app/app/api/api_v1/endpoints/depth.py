@@ -1,7 +1,11 @@
 import asyncio
 
 import typing
-from fastapi import WebSocket
+
+from aioredis import Redis
+from app.db.redis import get_redis_database
+from app.services.trade_service import TradeService
+from fastapi import WebSocket, Depends
 from app.core.config import settings
 from app.db.kafka import create_kafka_consumer
 from fastapi import APIRouter
@@ -72,3 +76,20 @@ class WebsocketConsumer(WebSocketEndpoint):
             else:
                 print("for msg in consumer: sending blank key")
                 return None, msg.value.decode()
+
+
+@router.get("/{market}")
+async def depth_market(
+        market: str,
+        redis_client: Redis = Depends(get_redis_database)
+):
+    await TradeService.use_db(redis_client, 0)
+    pattern = "depth-"
+    if market == "*":
+        pattern = f"{pattern}*"
+    else:
+        pattern = f"{pattern}{market}-*"
+    pattern = pattern.lower()
+    logger.info(f"/{market} - pattern: {pattern}")
+    key_value_pairs = await TradeService.get_key_value_pairs(redis_client, pattern)
+    return key_value_pairs

@@ -153,7 +153,7 @@ class TradeService:
                                                                 new_depth_value)
                 logger.info(f"is_saved_depth={is_saved_depth}")
             return depth_key, new_depth_value
-        return depth_key, new_order_value
+        return depth_key, old_depth_value
 
     @staticmethod
     async def _process_depth_for_order_cancel(redis_client, order_id: int, _event_or_trade: EventLog):
