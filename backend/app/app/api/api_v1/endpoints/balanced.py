@@ -69,8 +69,8 @@ async def event(
     # 3. forward event/trade to either 1 or both users
 
     results = {}
-    # redis_client to db = 0
-    await TradeService.use_db(redis_client, 0)
+    # # redis_client to db = 0
+    # await TradeService.use_db(redis_client, 0)
     # update depth
     depth_updates = await TradeService.update_depth(redis_client, kafka_producer, _event_or_trade)
     # logger.info(f"balanced::: depth_updates: {depth_updates}")
@@ -88,18 +88,19 @@ async def event(
 
 
 @router.post("/search")
-async def event(
+async def search(
         _pattern: models.Msg,
         redis_client: Redis = Depends(get_redis_database)
 ):
-    await TradeService.use_db(redis_client, 0)
+    # await TradeService.use_db(redis_client, 0)
     key_value_pairs = await TradeService.get_key_value_pairs(redis_client, _pattern.msg)
     return key_value_pairs
 
 
 @router.get("/events/cleanup")
-async def events(
+async def cleanup(
         redis_client: Redis = Depends(get_redis_database)
 ):
-    await TradeService.use_db(redis_client, 0)
+    # await TradeService.use_db(redis_client, 0)
     await CrudRedisGeneral.cleanup(redis_client, "*")
+    return True

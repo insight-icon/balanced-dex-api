@@ -83,7 +83,7 @@ async def depth_market(
         market: str,
         redis_client: Redis = Depends(get_redis_database)
 ):
-    await TradeService.use_db(redis_client, 0)
+    # await TradeService.use_db(redis_client, 0)
     pattern = "depth-"
     if market == "*":
         pattern = f"{pattern}*"

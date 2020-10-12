@@ -7,7 +7,6 @@ from app.crud.crud_redis_general import CrudRedisGeneral
 from app.crud.crud_redis_depth import CrudRedisDepth
 from loguru import logger
 
-from app.crud.crud_depth import CrudDepth
 from app.models.eventlog import EventLog
 from app.models.tradelog import TradeLog
 from pydantic import typing
