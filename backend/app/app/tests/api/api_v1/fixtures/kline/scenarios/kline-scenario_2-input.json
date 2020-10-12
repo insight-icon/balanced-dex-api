@@ -1,9 +1,0 @@
-[
-  {"order_id": 1, "market": "ICX", "price": 90, "size": 17, "user": "address1"},
-  {"order_id": 2, "market": "ICX", "price": 100, "size": 27, "user": "address1"},
-  {"order_id": 3, "market": "ICX", "price": 70, "size": 16, "user": "address2"},
-  {"order_id": 4, "market": "ICX", "price": 90, "size": 23, "user": "address1"},
-  {"order_id": 5, "market": "ICX", "price": 80, "size": 11, "user": "address2"},
-  {"order_id": 6, "market": "ICX", "price": 50, "size": 10, "user": "address1"}
-]
-
