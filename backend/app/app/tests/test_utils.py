@@ -1,5 +1,16 @@
+import os
 from os import listdir
 from os.path import isfile, join
+
+from app.crud.crud_redis_general import CrudRedisGeneral
+from app.services.kline_service import KLineService
+
+
+async def test_init(monkeypatch, get_redis_client, file_path):
+    monkeypatch.chdir(os.path.abspath(os.path.dirname(file_path)))
+
+    await CrudRedisGeneral.cleanup(get_redis_client, "*")
+    await KLineService.init_kline(get_redis_client, [60, 3600, 86400])
 
 
 # def get_input_output_file_sets(dir_path: str,fixtures_condition_map: dict):

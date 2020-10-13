@@ -3,7 +3,7 @@
   {},
   {},
   {
-    "kline-60-latest": {
+    "kline-balicd-60-latest": {
       "open": 0.003,
       "high": 0.003,
       "low": 0.003,
@@ -13,7 +13,7 @@
       "start_timestamp": 1601940087030000000,
       "end_timestamp": 1601940087030000000
     },
-    "kline-3600-latest": {
+    "kline-balicd-3600-latest": {
       "open": 0.003,
       "high": 0.003,
       "low": 0.003,
@@ -23,7 +23,7 @@
       "start_timestamp": 1601940087030000000,
       "end_timestamp": 1601940087030000000
     },
-    "kline-86400-latest": {
+    "kline-balicd-86400-latest": {
       "open": 0.003,
       "high": 0.003,
       "low": 0.003,
