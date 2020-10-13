@@ -73,8 +73,8 @@ Push new kline values for the corresponding interval.
 
 ## Tests
 
-* run tests while application is running, by going to the test file folder
+* Run tests while application is running, by using the following command from project folder
 
 ```bash
-pytest test_file.py
+PYTHONPATH=. pytest
 ``` 

@@ -3,15 +3,19 @@ import json
 import os
 
 from aioredis import Redis
+from app.core.config import settings
 from app.crud.crud_redis_general import CrudRedisGeneral
 from app.services.kline_service import KLineService
 from app.utils.file_utils import FileUtils
 from loguru import logger
 import pytest
 from app.tests.test_utils import get_input_output_file_sets, test_init
+from fastapi.testclient import TestClient
 
 PATH = 'fixtures/depth/'
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
 FIXTURES = get_input_output_file_sets(PATH)
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("input_file, expected_file", FIXTURES)
@@ -22,9 +26,10 @@ async def test_depth(
         get_redis_client: Redis,
 ) -> None:
 
-    await test_init(monkeypatch, get_redis_client, __file__)
+    await test_init(monkeypatch, get_redis_client)
     input_data = FileUtils.load_params_from_json(os.path.join(PATH, input_file))
     expected_data = FileUtils.load_params_from_json(os.path.join(PATH, expected_file))
+    # monkeypatch.chdir(os.path.abspath(os.path.dirname(__file__)))
 
     if len(input_data) == len(expected_data):
         for i in range(len(input_data)):
@@ -46,6 +51,16 @@ async def test_depth(
 
 
 def get_results(input_data, i):
+    # data = input_data[i]
+    # response = client.post(
+    #     f"{settings.API_V1_STR}/items/", json=data,
+    # )
+    # resp_body = str(response.read().decode(encoding="utf-8"))
+    # resp_dict = json.loads(resp_body)
+    # assert response.status == 200
+    # depth = resp_dict["depth"]
+    # return depth
+
     data = input_data[i]
     # logger.info(f"in get_results, data = {data}")
     body = json.dumps(data)

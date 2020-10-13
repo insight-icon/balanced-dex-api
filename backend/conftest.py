@@ -1,10 +1,11 @@
+import os
 from typing import Generator
 
 import motor
 import pytest
 from aiokafka import AIOKafkaProducer
+from app.db.redis import RedisDataBase
 
-from app.db.redis import get_redis_database, RedisDataBase
 from app.models.kline import KLine
 from app.models import EventLog
 from fastapi.testclient import TestClient
@@ -62,11 +63,11 @@ def test_client(test_user):
     with TestClient(app) as test_client:
         yield test_client
 
-    db = get_database()
+    db = get_mongodb()
     db["insight_test"]["person"].delete_one({"username": test_user["user"]["username"]})
 
 
-def get_database():
+def get_mongodb():
     mongoClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb", 27017)
     return mongoClient
 
@@ -80,8 +81,19 @@ def kline() -> KLine:
 async def get_redis_client():
     import asyncio
     import aioredis
-    from app.core.config import settings
 
     redis = RedisDataBase()
     redis.client = await asyncio.wait_for(aioredis.create_redis_pool("redis://localhost:6379"), 3)
     return redis.client
+
+
+# @pytest.fixture(scope="function")
+# def test_init(monkeypatch):
+#     def ok():
+#         monkeypatch.chdir(os.path.abspath(os.path.dirname(__file__)))
+#     # input_data = FileUtils.load_params_from_json(os.path.join(PATH, input_file))
+#     # expected_data = FileUtils.load_params_from_json(os.path.join(PATH, expected_file))
+#
+#     # await CrudRedisGeneral.cleanup(get_redis_client, "*")
+#     # await KLineService.init_kline(get_redis_client, [60, 3600, 86400])
+#     return ok

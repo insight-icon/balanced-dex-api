@@ -4,8 +4,8 @@ import os
 
 import pytest
 from aioredis import Redis
-from app.crud.crud_redis_general import CrudRedisGeneral
-from app.services.kline_service import KLineService
+# from app.crud.crud_redis_general import CrudRedisGeneral
+# from app.services.kline_service import KLineService
 from app.utils.file_utils import FileUtils
 from app.tests.test_utils import get_input_output_file_sets, test_init
 from loguru import logger
@@ -22,7 +22,7 @@ async def test_kline(
         get_redis_client: Redis,
 ) -> None:
 
-    await test_init(monkeypatch, get_redis_client, __file__)
+    await test_init(monkeypatch, get_redis_client)
     input_data = FileUtils.load_params_from_json(os.path.join(PATH, input_file))
     expected_data = FileUtils.load_params_from_json(os.path.join(PATH, expected_file))
 

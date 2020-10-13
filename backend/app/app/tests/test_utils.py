@@ -2,13 +2,15 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+import pytest
 from app.crud.crud_redis_general import CrudRedisGeneral
 from app.services.kline_service import KLineService
 
 
-async def test_init(monkeypatch, get_redis_client, file_path):
-    monkeypatch.chdir(os.path.abspath(os.path.dirname(file_path)))
-
+@pytest.mark.asyncio
+async def test_init(monkeypatch, get_redis_client):
+    # monkeypatch.chdir(os.path.abspath(os.path.dirname(file_path)))
+    # await CrudRedisGeneral.select(get_redis_client, 9)
     await CrudRedisGeneral.cleanup(get_redis_client, "*")
     await KLineService.init_kline(get_redis_client, [60, 3600, 86400])
 
