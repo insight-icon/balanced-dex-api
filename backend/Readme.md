@@ -49,25 +49,25 @@ Receives event or trade and process the input data to update state of the system
 
 Receives a pattern for searching the redis database for the matching keys.
 
-* GET /balanced/depth/{market}
+* GET /balanced/depth/market/{market}
 
 Gets order book for the given market, or all market if market value is *.
 
-* GET /balanced/kline/{interval}/count/{count}
+* GET /balanced/kline/market/{market}/interval/{interval}/count/{count}
 
 Gets klines for the given interval, starting from current till count
  
 ### protocol - ws
 
-* WS /balanced/transaction/subscribe/{address}
+* WS /balanced/transaction/subscribe/address/{address}
 
 Push any event or trade relating to the user address.
 
-* WS /balanced/depth/subscribe/{market}
+* WS /balanced/depth/subscribe/market/{market}
 
 Push new depth values for corresponding market.
 
-* WS /balanced/kline/subscribe/{market}/{interval}
+* WS /balanced/kline/subscribe/market/{market}/interval/{interval}
 
 Push new kline values for the corresponding interval.
 

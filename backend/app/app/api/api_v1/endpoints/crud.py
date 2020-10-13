@@ -28,6 +28,16 @@ async def post(
     return repr(result)
 
 
+# @router.get("/redis/properties")
+# async def redis_properties(
+#     redis_client: Redis = Depends(get_redis_database),
+# ):
+#     str = f"initial db - {redis_client.db}"
+#     x = await redis_client.select(1)
+#     str1 = str + f"changed db  - {x}, now it is {redis_client.db}"
+#     return repr(str1)
+
+
 @router.post("/redis/set")
 async def post(
     redis_data: models.RedisData,

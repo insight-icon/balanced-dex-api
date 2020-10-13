@@ -44,8 +44,6 @@ async def test_depth(
 
                 assert value == expected_result
 
-    await CrudRedisGeneral.cleanup(get_redis_client, "*")
-    await KLineService.init_kline(get_redis_client, [60, 3600, 86400])
     get_redis_client.close()
     await get_redis_client.wait_closed()
 

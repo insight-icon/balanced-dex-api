@@ -11,7 +11,7 @@ from starlette.types import Scope, Receive, Send
 router = APIRouter()
 
 
-@router.websocket_route("/subscribe/{address}")
+@router.websocket_route("/subscribe/address/{address}")
 class WebsocketConsumer(WebSocketEndpoint):
 
     def __init__(self, scope: Scope, receive: Receive, send: Send):
