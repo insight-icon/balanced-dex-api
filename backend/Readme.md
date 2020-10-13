@@ -67,7 +67,7 @@ Push any event or trade relating to the user address.
 
 Push new depth values for corresponding market.
 
-* WS /balanced/kline/subscribe/{interval}
+* WS /balanced/kline/subscribe/{market}/{interval}
 
 Push new kline values for the corresponding interval.
 

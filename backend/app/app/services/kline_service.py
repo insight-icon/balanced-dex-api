@@ -16,12 +16,13 @@ from app.models.kline import KLine
 class KLineService:
 
     @staticmethod
-    async def init_kline(redis_client, interval_seconds: int):
-        kline_key_latest = CrudRedisKLine.create_kline_key(interval_seconds, "latest")
-        is_exist = await CrudRedisGeneral.exists(redis_client, kline_key_latest)
-        logger.info(f"init_kline - is_exist = {is_exist}")
-        if is_exist != 1:
-            await CrudRedisGeneral.set(redis_client, kline_key_latest, "")
+    async def init_kline(redis_client, interval_seconds: list):
+        # kline_key_latest = CrudRedisKLine.create_kline_key(interval_seconds, "latest")
+        # is_exist = await CrudRedisGeneral.exists(redis_client, kline_key_latest)
+        # logger.info(f"init_kline - is_exist = {is_exist}")
+        # if is_exist != 1:
+        #     await CrudRedisGeneral.set(redis_client, kline_key_latest, "")
+        await CrudRedisKLine.set_kline_intervals(redis_client, interval_seconds)
 
     @staticmethod
     async def update_kline(redis_client, kafka_producer, _event_or_trade: Union[EventLog, TradeLog]) -> dict:
@@ -35,20 +36,29 @@ class KLineService:
     @staticmethod
     async def _update_kline_for_trade(redis_client, _trade: TradeLog):
         results = {}
-        existing_keys_values = await CrudRedisGeneral.get_key_value_pairs(redis_client, "kline*latest")
+        key_prefix = f"kline-{_trade.market.lower()}-"
+        intervals = await CrudRedisKLine.get_kline_intervals(redis_client)
+        keys = list()
+        for interval in intervals:
+            keys.append(f"{key_prefix}{interval}-latest")
+        existing_keys_values = await CrudRedisGeneral.mget_key_value_pairs(redis_client, keys)
+        # existing_keys_values = await CrudRedisGeneral.get_key_value_pairs(redis_client, "kline*latest")
+        logger.info(f"in _update_kline_for_trade, existing_keys_values: {existing_keys_values}")
         for key, value in existing_keys_values.items():
-            kline_latest_key = key.decode("utf-8")
+            # kline_latest_key = key.decode("utf-8")
+            kline_latest_key = key
             kline_latest_key_interval_seconds = CrudRedisKLine.get_interval_from_kline_latest_key(kline_latest_key)
-            kline_latest_value = value.decode("utf-8")
-            logger.info(f"result is {kline_latest_key}, {kline_latest_value} and interval is {kline_latest_key_interval_seconds}")
+            # kline_latest_value = value.decode("utf-8")
+            logger.info(f"result is {kline_latest_key}, {value} and interval is {kline_latest_key_interval_seconds}")
 
-            if kline_latest_value == "":
+            if value is None:
                 logger.info(f"kline_latest_value == ")
                 kline = await KLineService._create_new_kline(kline_latest_key_interval_seconds, _trade)
                 is_set = await CrudRedisKLine.set_kline(redis_client, key, kline.dict())
                 if is_set:
                     results[kline_latest_key] = kline.dict()
             else:
+                kline_latest_value = value.decode("utf-8")
                 logger.info(f"else of kline_latest_value == ")
                 kline_dict = json.loads(kline_latest_value)
                 kline_start_timestamp = kline_dict["start_timestamp"]

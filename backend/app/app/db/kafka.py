@@ -33,6 +33,7 @@ def create_kafka_consumer(loop: AbstractEventLoop,
         loop=loop,
         client_id=client_id,
         bootstrap_servers=bootstrap_server,
+        metadata_max_age_ms=30000,
         enable_auto_commit=enable_auto_commit,
         api_version=api_version
     )

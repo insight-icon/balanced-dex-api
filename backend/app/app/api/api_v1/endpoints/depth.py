@@ -16,7 +16,7 @@ from starlette.types import Scope, Receive, Send
 router = APIRouter()
 
 
-@router.websocket_route("/subscribe/{market}")
+@router.websocket_route("/subscribe/market/{market}")
 class WebsocketConsumer(WebSocketEndpoint):
 
     def __init__(self, scope: Scope, receive: Receive, send: Send):
@@ -78,7 +78,7 @@ class WebsocketConsumer(WebSocketEndpoint):
                 return None, msg.value.decode()
 
 
-@router.get("/{market}")
+@router.get("/market/{market}")
 async def depth_market(
         market: str,
         redis_client: Redis = Depends(get_redis_database)

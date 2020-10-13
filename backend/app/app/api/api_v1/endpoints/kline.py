@@ -19,26 +19,30 @@ router = APIRouter()
 
 async def init():
     redis_client = await get_redis_database()
-    await KLineService.init_kline(redis_client, 60)
-    await KLineService.init_kline(redis_client, 3600)
-    await KLineService.init_kline(redis_client, 86400)
+    await KLineService.init_kline(redis_client, [60, 3600, 86400])
 
 
 router.add_event_handler("startup", init)
 
 
-@router.websocket_route("/subscribe/{interval}")
+@router.websocket_route("/subscribe/market/{market}/interval/{interval}")
 class WebsocketConsumer(WebSocketEndpoint):
 
     def __init__(self, scope: Scope, receive: Receive, send: Send):
         super().__init__(scope, receive, send)
         loop = asyncio.get_event_loop()
         bootstrap_server = settings.KAFKA_INTERNAL_HOST_PORT
+        market = self._get_market(scope["path"])
         interval = self._get_interval(scope["path"])
-        topic = f"kline-{interval}-latest"
+        topic = f"^kline-{market}.*-{interval}.*-latest$"
         logger.info(f"subscribing to topic:: {topic}")
         self.kafka_consumer = create_kafka_consumer(loop, f"{topic}_consumer", bootstrap_server)
-        self.kafka_consumer.subscribe([topic])
+        self.kafka_consumer.subscribe(pattern=topic)
+
+    def _get_market(self, uri_path: str):
+        uri_parts = uri_path.split("/")
+        market = uri_parts[len(uri_parts) - 3]
+        return market.lower()
 
     def _get_interval(self, uri_path: str):
         uri_parts = uri_path.split("/")
@@ -87,13 +91,15 @@ class WebsocketConsumer(WebSocketEndpoint):
                 return None, msg.value.decode()
 
 
-@router.get("/{interval}/count/{count}")
+@router.get("/market/{market}/interval/{interval}/count/{count}")
 async def kline_interval(
+        market: str,
         interval: int,
         count: int,
         redis_client: Redis = Depends(get_redis_database)
 ):
-    pattern = f"kline-{interval}-*"
+    # f"^kline-{market}.*-{interval}.*-latest$"
+    pattern = f"kline-{market}-{interval}-*"
 
     kline_keys = []
     async for key in redis_client.iscan(match=pattern):

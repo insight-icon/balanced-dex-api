@@ -13,6 +13,18 @@ class CrudRedisKLine:
     #     keys = []
 
     @staticmethod
+    async def set_kline_intervals(redis_client, intervals: list):
+        kline_interval_json = json.dumps(intervals)
+        return await CrudRedisGeneral.set(redis_client, "kline-intervals", kline_interval_json)
+
+    @staticmethod
+    async def get_kline_intervals(redis_client) -> list:
+        kline_intervals_bytes = await CrudRedisGeneral.get(redis_client, "kline-intervals")
+        kline_intervals_str = kline_intervals_bytes.decode("utf-8")
+        kline_intervals = json.loads(kline_intervals_str)
+        return kline_intervals
+
+    @staticmethod
     async def set_kline(redis_client, key: str, kline: dict):
         kline_json = json.dumps(kline)
         return await CrudRedisGeneral.set(redis_client, key, kline_json)
@@ -30,17 +42,28 @@ class CrudRedisKLine:
 
 
     @staticmethod
-    def create_kline_key(interval_seconds: int, start_time: Union[int, str]) -> str:
+    def create_kline_key(market: str, interval_seconds: int, start_time: Union[int, str]) -> str:
         if type(start_time) == int:
-            return f"kline-{interval_seconds}-{start_time}"
+            return f"kline-{market}-{interval_seconds}-{start_time}"
         else:
-            return f"kline-{interval_seconds}-latest"
+            return f"kline-{market}-{interval_seconds}-latest"
+
+    @staticmethod
+    def get_market_from_kline_latest_key(kline_latest_key: str) -> str:
+        market = ""
+        key_parts = kline_latest_key.split("-")
+        if len(key_parts) == 4:
+            # interval_parts = key_parts[1].split("sec")
+            # interval = interval_parts[0]
+            market = key_parts[1]
+        return market
 
     @staticmethod
     def get_interval_from_kline_latest_key(kline_latest_key: str) -> int:
         interval = 0
         key_parts = kline_latest_key.split("-")
-        if len(key_parts) == 3:
-            interval_parts = key_parts[1].split("sec")
-            interval = interval_parts[0]
+        if len(key_parts) == 4:
+            # interval_parts = key_parts[1].split("sec")
+            # interval = interval_parts[0]
+            interval = key_parts[2]
         return int(interval)
