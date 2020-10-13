@@ -6,11 +6,10 @@ from starlette.datastructures import URL
 from loguru import logger
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from fastapi.requests import Request
-import logging
-import logstash
-import sys
-
+# from fastapi.requests import Request
+# import logging
+# import logstash
+# import sys
 
 # async def log_requests(request: Request, call_next):
 #     idem = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -41,5 +40,3 @@ class LoggerMiddleware:
         process_time = (time.time() - start_time) * 1000
         formatted_process_time = '{0:.2f}'.format(process_time)
         logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code=XXX")
-
-######################
