@@ -44,6 +44,7 @@ async def test_depth(
 
                 assert value == expected_result
 
+    await test_init(monkeypatch, get_redis_client)
     get_redis_client.close()
     await get_redis_client.wait_closed()
 

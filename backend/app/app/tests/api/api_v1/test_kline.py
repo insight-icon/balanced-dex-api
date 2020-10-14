@@ -45,6 +45,7 @@ async def test_kline(
                     else:
                         assert value == expected_result[key]
 
+    await test_init(monkeypatch, get_redis_client)
     get_redis_client.close()
     await get_redis_client.wait_closed()
 
