@@ -73,7 +73,7 @@ Push new kline values for the corresponding interval.
 
 ## Tests
 
-* Run tests while application is running, by using the following command from project folder
+* Run tests while application is running, by using the following command from project folder `/balanced-dex-api/orders/app`
 
 ```bash
 PYTHONPATH=. pytest

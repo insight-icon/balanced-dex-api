@@ -167,7 +167,7 @@ services:
       # Allow explicit env var override for tests
       - SMTP_HOST=${SMTP_HOST}
     build:
-      context: ./backend
+      context: ./orders
       dockerfile: backend.dockerfile
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
