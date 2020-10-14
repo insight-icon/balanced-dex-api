@@ -6,14 +6,15 @@ import logstash
 
 
 class LoggerConfig:
+    # TODO: refactor this
     def __init__(self):
-        # Todo: remove -> backtrace and diagnose in production,
-        #  Note: backtrace and diagnose will LEAK sensitive data
+        # Note: use "backtrace" and "diagnose" in production,
+        # Note: backtrace and diagnose will LEAK sensitive data
         logger.add("backend.log",
                    enqueue=True,
-                   rotation="5 MB",
-                   backtrace=True,
-                   diagnose=True
+                   rotation="5 MB"
+                   # backtrace=True,
+                   # diagnose=True
                    )
 
         # handler = logging.handlers.SysLogHandler(address=('localhost', 5000))

@@ -1,4 +1,4 @@
-from .crud_redis import redis
+# from .crud_redis import redis
 from .crud_mongo import mongo
 
 

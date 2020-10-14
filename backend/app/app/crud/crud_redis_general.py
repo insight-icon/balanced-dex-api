@@ -16,7 +16,7 @@ class CrudRedisGeneral:
 
     @staticmethod
     async def iscan(redis_client, pattern):
-        logger.info(f"crud depth in iscan func, pattern is {pattern}")
+        # logger.info(f"crud depth in iscan func, pattern is {pattern}")
         result = []
         async for key in redis_client.iscan(match=pattern):
             result.append(key)
@@ -24,7 +24,7 @@ class CrudRedisGeneral:
 
     @staticmethod
     async def get_key_value_pairs(redis_client, pattern):
-        logger.info(f"get_key_value_pairs, pattern is {pattern}")
+        # logger.info(f"get_key_value_pairs, pattern is {pattern}")
         keys = await CrudRedisGeneral.iscan(redis_client, pattern)
         result = {}
         if keys is None:
@@ -35,7 +35,7 @@ class CrudRedisGeneral:
 
     @staticmethod
     async def mget_key_value_pairs(redis_client, keys: list):
-        logger.info(f"mget_key_value_pairs func, keys: {keys}")
+        # logger.info(f"mget_key_value_pairs func, keys: {keys}")
         result = {}
         if keys is None or len(keys) == 0:
             return result

@@ -25,11 +25,7 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-
-# todo: introduces =>   INFO:     ASGI 'lifespan' protocol appears unsupported.
-# todo: which in turn is causing test fixture for getting client to fail
-# app.add_middleware(LoggerMiddleware)
-
+app.add_middleware(LoggerMiddleware)
 
 app.add_event_handler("startup", db_init)
 app.add_event_handler("shutdown", db_close)
