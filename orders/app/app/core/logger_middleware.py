@@ -26,4 +26,5 @@ class LoggerMiddleware:
 
         process_time = (time.time() - start_time) * 1000
         formatted_process_time = '{0:.2f}'.format(process_time)
-        logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code=XXX")
+        # logger.info(f"rid={idem} completed_in={formatted_process_time}ms status_code=XXX")
+        logger.info(f"rid={idem} completed_in={formatted_process_time}ms")

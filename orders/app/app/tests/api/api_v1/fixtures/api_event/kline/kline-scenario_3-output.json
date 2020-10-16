@@ -1,0 +1,194 @@
+[
+  {
+    "kline-balicd-60-latest": {
+      "open": 0.003,
+      "high": 0.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 1.223,
+      "interval_seconds": 60,
+      "start_timestamp": 160194087030000000,
+      "end_timestamp": 160194087030000000
+    },
+    "kline-balicd-3600-latest": {
+      "open": 0.003,
+      "high": 0.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 1.223,
+      "interval_seconds": 3600,
+      "start_timestamp": 160194087030000000,
+      "end_timestamp": 160194087030000000
+    },
+    "kline-balicd-86400-latest": {
+      "open": 0.003,
+      "high": 0.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 1.223,
+      "interval_seconds": 86400,
+      "start_timestamp": 160194087030000000,
+      "end_timestamp": 160194087030000000
+    }
+  },
+  {
+    "kline-icx-60-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 1.003,
+      "close": 1.003,
+      "volume": 1.5,
+      "interval_seconds": 60,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087130000000
+    },
+    "kline-icx-3600-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 1.003,
+      "close": 1.003,
+      "volume": 1.5,
+      "interval_seconds": 3600,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087130000000
+    },
+    "kline-icx-86400-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 1.003,
+      "close": 1.003,
+      "volume": 1.5,
+      "interval_seconds": 86400,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087130000000
+    }
+  },
+  {
+    "kline-balicd-60-latest": {
+      "open": 0.303,
+      "high": 0.303,
+      "low": 0.303,
+      "close": 0.303,
+      "volume": 1,
+      "interval_seconds": 60,
+      "start_timestamp": 1601940087540000000,
+      "end_timestamp": 1601940087540000000
+    },
+    "kline-balicd-3600-latest": {
+      "open": 0.303,
+      "high": 0.303,
+      "low": 0.303,
+      "close": 0.303,
+      "volume": 1,
+      "interval_seconds": 3600,
+      "start_timestamp": 1601940087540000000,
+      "end_timestamp": 1601940087540000000
+    },
+    "kline-balicd-86400-latest": {
+      "open": 0.303,
+      "high": 0.303,
+      "low": 0.303,
+      "close": 0.303,
+      "volume": 1,
+      "interval_seconds": 86400,
+      "start_timestamp": 1601940087540000000,
+      "end_timestamp": 1601940087540000000
+    }
+  },
+  {
+    "kline-icx-60-latest": {
+      "open": 0.003,
+      "high": 0.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 1.223,
+      "interval_seconds": 60,
+      "start_timestamp": 160194087430000000,
+      "end_timestamp": 160194087430000000
+    },
+    "kline-icx-3600-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 2.723,
+      "interval_seconds": 3600,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087430000000
+    },
+    "kline-icx-86400-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 2.723,
+      "interval_seconds": 86400,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087430000000
+    }
+  },
+  {
+    "kline-balicd-60-latest": {
+      "open": 3.303,
+      "high": 3.303,
+      "low": 3.303,
+      "close": 3.303,
+      "volume": 1.5,
+      "interval_seconds": 60,
+      "start_timestamp": 1601940087940000000,
+      "end_timestamp": 1601940087940000000
+    },
+    "kline-balicd-3600-latest": {
+      "open": 0.303,
+      "high": 3.303,
+      "low": 0.303,
+      "close": 3.303,
+      "volume": 2.5,
+      "interval_seconds": 3600,
+      "start_timestamp": 1601940087540000000,
+      "end_timestamp": 1601940087940000000
+    },
+    "kline-balicd-86400-latest": {
+      "open": 0.303,
+      "high": 3.303,
+      "low": 0.303,
+      "close": 3.303,
+      "volume": 2.5,
+      "interval_seconds": 86400,
+      "start_timestamp": 1601940087540000000,
+      "end_timestamp": 1601940087940000000
+    }
+  },
+  {
+    "kline-icx-60-latest": {
+      "open": 0.003,
+      "high": 0.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 1.223,
+      "interval_seconds": 60,
+      "start_timestamp": 160194087530000000,
+      "end_timestamp": 160194087530000000
+    },
+    "kline-icx-3600-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 3.9459999999999997,
+      "interval_seconds": 3600,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087530000000
+    },
+    "kline-icx-86400-latest": {
+      "open": 1.003,
+      "high": 1.003,
+      "low": 0.003,
+      "close": 0.003,
+      "volume": 3.9459999999999997,
+      "interval_seconds": 86400,
+      "start_timestamp": 160194087130000000,
+      "end_timestamp": 160194087530000000
+    }
+  }
+]

@@ -76,14 +76,14 @@ class KLineService:
                         results[kline_latest_key] = kline_dict
                 else:
                     logger.info("# store existing kline and create new kline")
-                    kline_key = CrudRedisKLine.create_kline_key(kline_latest_key_interval_seconds, int(kline_start_timestamp))
+                    kline_key = CrudRedisKLine.create_kline_key(_trade.market, kline_latest_key_interval_seconds, int(kline_start_timestamp))
                     logger.info(f"kline_start_timestamp: {kline_start_timestamp}, kline_key: {kline_key}, and kline: {kline_dict}")
                     await CrudRedisKLine.set_kline(redis_client, kline_key, kline_dict)
 
                     new_kline = await KLineService._create_new_kline(kline_latest_key_interval_seconds, _trade)
                     is_set = await CrudRedisKLine.set_kline(redis_client, key, new_kline.dict())
                     if is_set:
-                        results[kline_latest_key] = kline_dict
+                        results[kline_latest_key] = new_kline.dict()
         return results
 
     @staticmethod
