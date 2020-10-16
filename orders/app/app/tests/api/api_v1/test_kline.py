@@ -10,7 +10,7 @@ from app.utils.file_utils import FileUtils
 from app.tests.test_utils import get_input_output_file_sets, test_init
 from loguru import logger
 
-PATH = 'fixtures/kline/'
+PATH = 'fixtures/api_event/kline/'
 FIXTURES = get_input_output_file_sets(PATH)
 
 @pytest.mark.asyncio

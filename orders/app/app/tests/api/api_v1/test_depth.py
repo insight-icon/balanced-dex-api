@@ -12,7 +12,7 @@ import pytest
 from app.tests.test_utils import get_input_output_file_sets, test_init
 from fastapi.testclient import TestClient
 
-PATH = 'fixtures/depth/'
+PATH = 'fixtures/api_event/depth/'
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 FIXTURES = get_input_output_file_sets(PATH)
 

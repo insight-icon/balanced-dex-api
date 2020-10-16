@@ -1,0 +1,38 @@
+[
+  {
+    "event":"Trade",
+    "market":"BALICD",
+    "price":"0.003",
+    "size":"1.223",
+    "maker": "hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d",
+    "maker_order": 3,
+    "taker": "hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "taker_order": 4,
+    "user":"hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "timestamp":1601940087030000000
+  },
+  {
+    "event":"Trade",
+    "market":"BALICD",
+    "price":"0.303",
+    "size":"1",
+    "maker": "hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d",
+    "maker_order": 5,
+    "taker": "hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "taker_order": 6,
+    "user":"hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "timestamp":1601940087040000000
+  },
+  {
+    "event":"Trade",
+    "market":"BALICD",
+    "price":"3.303",
+    "size":"1.5",
+    "maker": "hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d",
+    "maker_order": 7,
+    "taker": "hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "taker_order": 8,
+    "user":"hx562dc1e2c7897432c298115bc7fbcc3b9d5df294",
+    "timestamp":1601940087940000000
+  }
+]

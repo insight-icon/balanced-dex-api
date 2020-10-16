@@ -1,30 +1,25 @@
 from typing import Union
 
-import typing
-from app.crud.crud_kafka import CrudKafka
+from motor.motor_asyncio import AsyncIOMotorClient
+
 from app.crud.crud_redis_general import CrudRedisGeneral
-from app.crud.crud_ws import CrudWS
-from app.db.kafka import create_kafka_producer, close_kafka_producer, create_kafka_consumer
-from app.models import TradeLog
+
+from app.db.kafka import create_kafka_producer, close_kafka_producer
+from app.db.mongodb import get_mongodb_database
 from app.services.kline_service import KLineService
 from app.services.ws_service import WsService
 from loguru import logger
 import asyncio
 
-from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from aiokafka import AIOKafkaProducer
 from aioredis import Redis
 from app.core.config import settings
 from app.db.redis import get_redis_database
 
-# from app.models import RedisData
-# from app.models import Msg
-# from app.models.orders import EventLog, TradeLog
 from app import models
 
 from app.services.trade_service import TradeService
-from fastapi import APIRouter, WebSocket, Depends
-from starlette.endpoints import WebSocketEndpoint
-from starlette.types import Scope, Receive, Send
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 kafka_producer: AIOKafkaProducer
@@ -55,12 +50,11 @@ router.add_event_handler("shutdown", shut)
 @router.post("/event")
 async def event(
         _event_or_trade: Union[models.EventLog, models.TradeLog],
+        mongodb_client: AsyncIOMotorClient = Depends(get_mongodb_database),
         redis_client: Redis = Depends(get_redis_database)
 ):
-    # # save raw event/trade in redis collection
-    # # save raw _event in db 1
-    # await TradeService.use_db(redis_client, 1)
-    # logger.info(f"redis db => {redis_client.db}")
+    # save raw input in mongodb
+    # logger.info(f"mongodb_client db => {mongodb_client}")
     # is_saved = await TradeService.save_raw_event(redis_client, _event_or_trade)
     # logger.info(f"TradeService.save_raw_event - is_saved ? {is_saved}")
 
