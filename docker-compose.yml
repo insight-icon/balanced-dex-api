@@ -155,8 +155,8 @@ services:
         # to disable www redirection remove the section: ${STACK_NAME?Variable not set}-www-redirect,
         - traefik.http.routers.${STACK_NAME?Variable not set}-proxy-http.middlewares=${STACK_NAME?Variable not set}-www-redirect,${STACK_NAME?Variable not set}-https-redirect
 
-  backend:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+  orders:
+    image: '${DOCKER_IMAGE_BACKEND_ORDERS?Variable not set}:${TAG-latest}'
 #    depends_on:
 #      - db
     env_file:
@@ -175,8 +175,8 @@ services:
       labels:
         - traefik.enable=true
         - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
-        - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
-        - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
+        - traefik.http.routers.${STACK_NAME?Variable not set}-orders-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
+        - traefik.http.services.${STACK_NAME?Variable not set}-orders.loadbalancer.server.port=80
     networks:
       - default
 # end of backend

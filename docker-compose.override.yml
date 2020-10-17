@@ -28,7 +28,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-traefik-public-http.rule=Host(`${DOMAIN?Variable not set}`)
       - traefik.http.services.${STACK_NAME?Variable not set}-traefik-public.loadbalancer.server.port=80
 
-  backend:
+  orders:
     ports:
       - "8888:8888"
     volumes:
@@ -47,8 +47,9 @@ services:
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
-      - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
+      # TODO: adjust below to differentiate between "orders" and "loans" service
+      - traefik.http.routers.${STACK_NAME?Variable not set}-orders-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
+      - traefik.http.services.${STACK_NAME?Variable not set}-orders.loadbalancer.server.port=80
 
 networks:
   traefik-public:
