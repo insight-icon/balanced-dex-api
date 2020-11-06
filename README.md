@@ -1,11 +1,36 @@
 # balanced-dex-api
 
+> WIP 
+
+Backend APIs for the Balanced Token DEX. Contains both REST and websocket endpoints for retrieving and subscribing to transactions of the token. Based on FastAPI. 
+
+## Services 
+
+- **blockparser**
+    - WIP - Waiting on contracts to be run on testnet 
+    - Polls node and filters events based on address then forwards the event logs to Kafka topic  
+- **orders** 
+    - Takes order events and builds K-Lines (candlestick charts) for DEX 
+    - Historical request filled from REST API and realtime updates based on websocket connection 
+    - Currently tested based on mocked event logs until contracts running 
+    - OpenAPI spec and rendered docs 
+    - Checkout it's [README](./orders/README.md) for more info on endpoints 
+- **loans** 
+    - WIP - Still scoping 
+    
+## Stack 
+
+- **Kafka** 
+    - Main message bus of the stack. 
+    - Currently configured with schema registry and confluent control center
+- **Redis**
+    - Main backend for orders service and websocket connection manager 
+
 ## Backend Requirements
 
 * [Docker](https://www.docker.com/).
 * [Docker Compose](https://docs.docker.com/compose/install/).
 * [Poetry](https://python-poetry.org/) for Python package and environment management.
-
 
 ## Backend local development
 
@@ -27,6 +52,8 @@ Alternative automatic documentation with ReDoc (from the OpenAPI backend): http:
 
 Traefik UI, to see how the routes are being handled by the proxy: http://localhost:8090
 
+Confluent Control, UI for kafka cluster: http://localhost:9021/ 
+
 **Note**: The first time you start your stack, it might take a minute for it to be ready. While the backend waits for the database to be ready and configures everything. You can check the logs to monitor it.
 
 To check the logs, run:
@@ -38,11 +65,8 @@ docker-compose logs
 To check the logs of a specific service, add the name of the service, e.g.:
 
 ```bash
-docker-compose logs backend
+docker-compose logs orders
 ```
-
-If your Docker is not running in `localhost` (the URLs above wouldn't work) check the sections below on **Development with Docker Toolbox** and **Development with a custom IP**.
-
 
 #### Test Coverage
 
