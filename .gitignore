@@ -8,5 +8,8 @@ docker-stack.yml
 !*.secret
 
 
+*.log
+poetry.lock
+
 env
 venv
