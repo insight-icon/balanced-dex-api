@@ -14,5 +14,9 @@ config > docker-stack.yml
 docker-compose -f docker-stack.yml build
 docker-compose -f docker-stack.yml down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
 docker-compose -f docker-stack.yml up -d
-docker-compose -f docker-stack.yml exec -T backend bash /app/tests-start.sh "$@"
+
+# Run the tests on each service
+docker-compose -f docker-stack.yml exec -T orders bash /app/tests-start.sh "$@"
+
+# Take down stack
 docker-compose -f docker-stack.yml down -v --remove-orphans
